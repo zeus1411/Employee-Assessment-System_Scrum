@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-EmployeeAssessmentApplication<EmployeeAssessment-EA_BE>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.example.EmployeeAssessment.EmployeeAssessmentApplication",
+      "projectName": "EmployeeAssessment-EA_BE",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
