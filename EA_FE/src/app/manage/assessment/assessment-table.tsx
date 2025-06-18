@@ -52,50 +52,47 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import {
-  useDeleteUserMutation,
-  useGetUserList,
-  useAccountProfile,
-} from "@/queries/useAccount";
-import { UserType } from "@/schemaValidations/account.schema";
-import { useAppContext } from "@/components/app-provider";
-import EditUser from "./edit-account";
-import CreateUser from "./add-user";
+  useDeleteAssessmentMutation,
+  useAssessmentList,
+} from "@/queries/useAssessment";
+import { useAccountProfile } from "@/queries/useAccount";
+import { AssessmentCriteriaType } from "@/schemaValidations/assessment.schema";
 import TableSkeleton from "@/components/Skeleton";
+import EditAssessment from "./edit-assessment-form";
+import CreateAssessment from "./create-assessment-form";
 
-const UserTableContext = createContext<{
-  userIdEdit: number | undefined;
-  setUserIdEdit: (value: number | undefined) => void;
-  userDelete: UserType | null;
-  setUserDelete: (value: UserType | null) => void;
+const AssessmentTableContext = createContext<{
+  assessmentIdEdit: number | undefined;
+  setAssessmentIdEdit: (value: number | undefined) => void;
+  assessmentDelete: AssessmentCriteriaType | null;
+  setAssessmentDelete: (value: AssessmentCriteriaType | null) => void;
 }>({
-  userIdEdit: undefined,
-  setUserIdEdit: () => {},
-  userDelete: null,
-  setUserDelete: () => {},
+  assessmentIdEdit: undefined,
+  setAssessmentIdEdit: () => {},
+  assessmentDelete: null,
+  setAssessmentDelete: () => {},
 });
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
-function AlertDialogDeleteUser({
-  userDelete,
-  setUserDelete,
+function AlertDialogDeleteAssessment({
+  assessmentDelete,
+  setAssessmentDelete,
   onSuccess,
 }: {
-  userDelete: UserType | null;
-  setUserDelete: (value: UserType | null) => void;
+  assessmentDelete: AssessmentCriteriaType | null;
+  setAssessmentDelete: (value: AssessmentCriteriaType | null) => void;
   onSuccess?: () => void;
 }) {
-  const t = useTranslations("ManageUsers");
-  const { mutateAsync, isPending } = useDeleteUserMutation();
+  const t = useTranslations("ManageAssessments");
+  const { mutateAsync, isPending } = useDeleteAssessmentMutation();
 
-  const deleteUser = async () => {
-    if (userDelete) {
+  const deleteAssessment = async () => {
+    if (assessmentDelete) {
       try {
-        await mutateAsync(userDelete.userId);
-        setUserDelete(null);
-        toast({
-          description: t("DeleteSuccess"),
-        });
+        await mutateAsync(assessmentDelete.assessmentCriteriaId);
+        setAssessmentDelete(null);
+        toast({ description: t("DeleteSuccess") });
         onSuccess?.();
       } catch (error) {
         handleErrorApi({ error });
@@ -105,11 +102,9 @@ function AlertDialogDeleteUser({
 
   return (
     <AlertDialog
-      open={Boolean(userDelete)}
+      open={Boolean(assessmentDelete)}
       onOpenChange={(value) => {
-        if (!value) {
-          setUserDelete(null);
-        }
+        if (!value) setAssessmentDelete(null);
       }}
     >
       <AlertDialogContent>
@@ -117,12 +112,12 @@ function AlertDialogDeleteUser({
           <AlertDialogTitle>{t("Delete")}</AlertDialogTitle>
           <AlertDialogDescription>
             {t("ConfirmDelete")}{" "}
-            <span className="font-bold">{userDelete?.userName}</span>?
+            <span className="font-bold">{assessmentDelete?.criteriaName}</span>?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteUser} disabled={isPending}>
+          <AlertDialogAction onClick={deleteAssessment} disabled={isPending}>
             {isPending ? t("Submitting") : t("Delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -131,34 +126,32 @@ function AlertDialogDeleteUser({
   );
 }
 
-export default function UserTable() {
-  const t = useTranslations("ManageUsers");
+export default function AssessmentTable() {
+  const t = useTranslations("ManageAssessments");
   const paginationT = useTranslations("Pagination");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuth } = useAppContext();
   const page = Number(searchParams.get("page")) || 1;
   const pageIndex = page - 1;
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [userIdEdit, setUserIdEdit] = useState<number | undefined>();
-  const [userDelete, setUserDelete] = useState<UserType | null>(null);
+  const [assessmentIdEdit, setAssessmentIdEdit] = useState<
+    number | undefined
+  >();
+  const [assessmentDelete, setAssessmentDelete] =
+    useState<AssessmentCriteriaType | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Fetch user permissions
-  const { data: accountData, isLoading: isAccountLoading } =
-    useAccountProfile();
-
-  // Fetch user list
-  const userListQuery = useGetUserList(page, pageSize);
-  const data = userListQuery.data?.payload.data.result ?? [];
-  const totalItems = assessmentListQuery.data?.data.meta.total ?? 0;
+  const assessmentListQuery = useAssessmentList(page, pageSize);
+  const data = assessmentListQuery.data?.payload.data.result ?? [];
+  console.log("sadasdasdasd data", assessmentListQuery.data);
+  const totalItems = assessmentListQuery.data?.payload.data.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const columns: ColumnDef<UserType>[] = [
+  const columns: ColumnDef<AssessmentCriteriaType>[] = [
     {
-      accessorKey: "userId",
+      accessorKey: "assessmentCriteriaId",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -168,46 +161,33 @@ export default function UserTable() {
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("userId")}</div>,
+      cell: ({ row }) => <div>{row.getValue("assessmentCriteriaId")}</div>,
     },
     {
-      accessorKey: "userName",
+      accessorKey: "criteriaName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("Username")}
+          {t("CriteriaName")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("userName")}</div>,
+      cell: ({ row }) => <div>{row.getValue("criteriaName")}</div>,
     },
     {
-      accessorKey: "email",
+      accessorKey: "description",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("Email")}
+          {t("Description")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("email")}</div>,
-    },
-    {
-      accessorKey: "role",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {t("Role")}
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{t(row.getValue("role"))}</div>,
+      cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
     {
       id: "actions",
@@ -224,11 +204,13 @@ export default function UserTable() {
             <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setUserIdEdit(row.original.userId)}
+              onClick={() =>
+                setAssessmentIdEdit(row.original.assessmentCriteriaId)
+              }
             >
               {t("Edit")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setUserDelete(row.original)}>
+            <DropdownMenuItem onClick={() => setAssessmentDelete(row.original)}>
               {t("Delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -264,52 +246,62 @@ export default function UserTable() {
   };
 
   return (
-    <UserTableContext.Provider
-      value={{ userIdEdit, setUserIdEdit, userDelete, setUserDelete }}
+    <AssessmentTableContext.Provider
+      value={{
+        assessmentIdEdit,
+        setAssessmentIdEdit,
+        assessmentDelete,
+        setAssessmentDelete,
+      }}
     >
       <div className="w-full">
-        <EditUser
-          id={userIdEdit}
-          setId={setUserIdEdit}
+        <EditAssessment
+          id={assessmentIdEdit}
+          setId={setAssessmentIdEdit}
           onSubmitSuccess={() => {
-            setUserIdEdit(undefined);
-            userListQuery.refetch();
+            setAssessmentIdEdit(undefined);
+            assessmentListQuery.refetch();
           }}
         />
-        <AlertDialogDeleteUser
-          userDelete={userDelete}
-          setUserDelete={setUserDelete}
-          onSuccess={userListQuery.refetch}
+        <AlertDialogDeleteAssessment
+          assessmentDelete={assessmentDelete}
+          setAssessmentDelete={setAssessmentDelete}
+          onSuccess={assessmentListQuery.refetch}
         />
-        {isAccountLoading || userListQuery.isLoading ? (
+        {assessmentListQuery.isLoading ? (
           <TableSkeleton />
-        ) : userListQuery.isError ? (
+        ) : assessmentListQuery.isError ? (
           <div className="text-red-500">
-            {t("Error")}: {userListQuery.error.message}
+            {t("Error")}: {assessmentListQuery.error.message}
           </div>
         ) : (
           <>
             <div className="flex items-center py-4 gap-5">
-              <CreateUser onSubmitSuccess={userListQuery.refetch} />
+              <CreateAssessment onSubmitSuccess={assessmentListQuery.refetch} />
               <Input
-                placeholder={t("FilterEmails")}
+                placeholder={t("FilterCriteriaNames")}
                 value={
-                  (table.getColumn("email")?.getFilterValue() as string) ?? ""
+                  (table
+                    .getColumn("criteriaName")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onChange={(event) =>
-                  table.getColumn("email")?.setFilterValue(event.target.value)
+                  table
+                    .getColumn("criteriaName")
+                    ?.setFilterValue(event.target.value)
                 }
                 className="max-w-sm w-[150px]"
               />
               <Input
-                placeholder={t("FilterUsernames")}
+                placeholder={t("FilterDescriptions")}
                 value={
-                  (table.getColumn("userName")?.getFilterValue() as string) ??
-                  ""
+                  (table
+                    .getColumn("description")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onChange={(event) =>
                   table
-                    .getColumn("userName")
+                    .getColumn("description")
                     ?.setFilterValue(event.target.value)
                 }
                 className="max-w-sm w-[150px]"
@@ -406,6 +398,6 @@ export default function UserTable() {
           </>
         )}
       </div>
-    </UserTableContext.Provider>
+    </AssessmentTableContext.Provider>
   );
 }
