@@ -2,7 +2,7 @@ package com.example.EmployeeAssessment.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
+
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +26,6 @@ import com.example.EmployeeAssessment.service.UserService;
 import com.example.EmployeeAssessment.util.SecurityUtil;
 import com.example.EmployeeAssessment.util.annotation.APIMessage;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
-
-import jakarta.validation.Valid;
 
 import jakarta.validation.Valid;
 
