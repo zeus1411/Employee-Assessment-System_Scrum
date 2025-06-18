@@ -4,6 +4,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.EmployeeAssessment.domain.User;
+import com.example.EmployeeAssessment.domain.request.ReqLoginDTO;
+import com.example.EmployeeAssessment.domain.request.ReqUpdateUserDTO;
 import com.example.EmployeeAssessment.domain.response.UserReponseDTO;
 import com.example.EmployeeAssessment.repository.UserRepository;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
@@ -33,7 +35,35 @@ public class UserService {
         User savedUser = userRepository.save(newUser);
         return savedUser;
     }
-        // Convert User to UserReponseDTO
+
+    public UserReponseDTO handleUpdateUser(Long userId, ReqUpdateUserDTO updatedUser) throws IdInvalidException {
+        User existingUser = this.userRepository.findById(userId)
+                .orElseThrow(() -> new IdInvalidException("User not found with id: " + userId));
+
+        // Update fields
+        existingUser.setUserName(updatedUser.getUserName());
+        existingUser.setEmail(updatedUser.getEmail());
+
+        // Only update password if provided
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            String hashPassword = this.passwordEncoder.encode(updatedUser.getPassword());
+            existingUser.setPassword(hashPassword);
+        }
+
+        // Update role if provided
+        if (updatedUser.getRole() != null) {
+            existingUser.setRole(updatedUser.getRole());
+        }
+
+        User savedUser = this.userRepository.save(existingUser);
+        return this.convertToUserReponseDTO(savedUser);
+    }
+
+    public User getUserById(Long userId) throws IdInvalidException {
+        return this.userRepository.findById(userId)
+                .orElseThrow(() -> new IdInvalidException("User not found with id: " + userId));
+    }
+
     public UserReponseDTO convertToUserReponseDTO(User user) {
         UserReponseDTO userResponse = new UserReponseDTO();
         userResponse.setUserId(user.getUserId());
