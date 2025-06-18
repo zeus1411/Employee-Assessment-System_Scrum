@@ -1,4 +1,4 @@
-package com.example.EmployeeAssessment.domain.response.login;
+package com.example.EmployeeAssessment.domain.response.auth;
 
 import com.example.EmployeeAssessment.domain.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,9 +10,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ResLoginDTO {
+public class ResRefreshDTO {
     @JsonProperty("access_token")
     private String accessToken;
+
+    @JsonProperty("refresh_token")
+    private String refreshToken;
 
     private UserLogin user;
 
@@ -44,5 +47,4 @@ public class ResLoginDTO {
         private String email;
         private String name;
     }
-
 }

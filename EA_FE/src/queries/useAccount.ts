@@ -1,11 +1,10 @@
-// src/queries/useUser.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import userApiRequest from "@/apiRequests/account";
 import {
   CreateUserBodyType,
   UpdateUserBodyType,
   UpdatePasswordBodyType,
 } from "@/schemaValidations/account.schema";
+import userApiRequest from "@/apiRequests/account";
 
 export const useGetUserList = (page: number, size: number) => {
   return useQuery({
@@ -18,7 +17,7 @@ export const useGetUser = ({
   id,
   enabled,
 }: {
-  id: string;
+  id: number;
   enabled: boolean;
 }) => {
   return useQuery({
@@ -31,13 +30,7 @@ export const useGetUser = ({
 export const useAddUserMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      body,
-      avatarFile,
-    }: {
-      body: CreateUserBodyType;
-      avatarFile?: File;
-    }) => userApiRequest.add(body, avatarFile),
+    mutationFn: (body: CreateUserBodyType) => userApiRequest.add(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
@@ -47,15 +40,8 @@ export const useAddUserMutation = () => {
 export const useUpdateUserMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      body,
-      avatarFile,
-    }: {
-      id: string;
-      body: UpdateUserBodyType;
-      avatarFile?: File;
-    }) => userApiRequest.update(id, body, avatarFile),
+    mutationFn: ({ id, body }: { id: number; body: UpdateUserBodyType }) =>
+      userApiRequest.update(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
@@ -76,14 +62,14 @@ export const useUpdatePasswordMutation = () => {
 export const useDeleteUserMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: userApiRequest.delete,
+    mutationFn: (id: number) => userApiRequest.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 };
 
-export const useUserProfile = () => {
+export const useAccountProfile = () => {
   return useQuery({
     queryKey: ["user-profile"],
     queryFn: userApiRequest.me,

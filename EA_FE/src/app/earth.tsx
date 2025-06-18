@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import Globe from "react-globe.gl";
 
-const Home = () => {
+const Earth = () => {
   const globeEl = useRef();
 
   useEffect(() => {
@@ -26,12 +26,12 @@ const Home = () => {
     <Globe
       ref={globeEl}
       globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-      backgroundColor="rgba(0,0,0,0)" // Đặt nền trong suốt hoặc màu khác
+      backgroundColor="rgba(0,0,0,0)"
       showAtmosphere={true}
-      width={window.innerWidth} // Chiều rộng của quả địa cầu, có thể điều chỉnh
-      height={window.innerHeight} // Chiều cao của quả địa cầu, có thể điều chỉnh
+      width={window.innerWidth}
+      height={window.innerHeight}
     />
   );
 };
 
-export default Home;
+export default Earth;

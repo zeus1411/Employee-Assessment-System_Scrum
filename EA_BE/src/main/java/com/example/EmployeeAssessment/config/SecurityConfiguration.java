@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -23,7 +22,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.web.cors.CorsConfigurationSource;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Collection;
@@ -33,8 +32,14 @@ import java.util.Collection;
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
 
+    private final CorsConfigurationSource corsConfigurationSource;
+
     @Value("${ea.jwt.base64-secret}")
     private String jwtKey;
+
+    SecurityConfiguration(CorsConfigurationSource corsConfigurationSource) {
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,29 +47,32 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whiteList = {
-            "/",
-            "/api/v1/auth/login",
-            "/resources/**",
-            "/css/**",
-            "/js/**"
+                "/",
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
+                "/resources/**",
+                "/css/**",
+                "/js/**"
         };
 
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> {}) // enable CORS with default config
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers(whiteList).permitAll()
-                .requestMatchers("/api/v1/assessments/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/assessment-criteria").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR")
-                .requestMatchers("/api/v1/assessment-criteria/**").hasAnyAuthority("ROLE_ADMIN")
-                .requestMatchers("/api/v1/teams/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                .authenticationEntryPoint(customAuthenticationEntryPoint))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(whiteList).permitAll()
+                        .requestMatchers("/api/v1/assessments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/assessment-criteria")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR")
+                        .requestMatchers("/api/v1/assessment-criteria/**").hasAnyAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v1/teams/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(customAuthenticationEntryPoint))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
@@ -72,11 +80,11 @@ public class SecurityConfiguration {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         String[] whiteList = {
-            "/",
-            "/api/v1/auth/login",
-            "/resources/**",
-            "/css/**",
-            "/js/**"
+                "/",
+                "/api/v1/auth/login",
+                "/resources/**",
+                "/css/**",
+                "/js/**"
         };
         return (web) -> web.ignoring().requestMatchers(whiteList);
     }

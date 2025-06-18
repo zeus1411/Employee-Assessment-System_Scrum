@@ -42,9 +42,9 @@ public class AssessmentCriteriaService {
     }
 
     // update
-    public AssessmentCriteria updateAssessmentCriteria(AssessmentCriteria assessmentCriteria) {
+    public AssessmentCriteria updateAssessmentCriteria(Long assessmentId, AssessmentCriteria assessmentCriteria) {
         Optional<AssessmentCriteria> assessmentCriteriaOptional = this.assessmentCriteriaRepository
-                .findById(assessmentCriteria.getAssessmentCriteriaId());
+                .findById(assessmentId);
         if (assessmentCriteriaOptional.isPresent()) {
             AssessmentCriteria currentAssessmentCriteria = assessmentCriteriaOptional.get();
             currentAssessmentCriteria.setCriteriaName(assessmentCriteria.getCriteriaName());
@@ -60,6 +60,20 @@ public class AssessmentCriteriaService {
                 .findById(assessmentCriteriaId);
         if (assessmentCriteriaOptional.isPresent())
             this.assessmentCriteriaRepository.delete(assessmentCriteriaOptional.get());
+    }
+
+    public AssessmentCriteria getAssessmentById(long assessmentCriteriaId) {
+        Optional<AssessmentCriteria> assessmentCriteriaOptional = this.assessmentCriteriaRepository
+                .findById(assessmentCriteriaId);
+        if (assessmentCriteriaOptional.isPresent()) {
+            return assessmentCriteriaOptional.get();
+        }
+        return null;
+
+    }
+
+    public boolean existsByCriteriaName(String criteriaName) {
+        return assessmentCriteriaRepository.existsByCriteriaName(criteriaName);
     }
 
 }

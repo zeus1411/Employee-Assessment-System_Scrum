@@ -1,4 +1,3 @@
-// src/schemaValidations/user.schema.ts
 import { z } from "zod";
 
 export const CreateUserBody = z
@@ -6,19 +5,20 @@ export const CreateUserBody = z
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
-    name: z.string().min(1, "Name is required"),
-    phone: z.string().optional(),
-    avatar: z.string().optional(),
+    userName: z.string().min(1, "Username is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
+const roleSchema = z.object({
+  roleId: z.string(),
+});
 export const UpdateUserBody = z.object({
-  name: z.string().min(1, "Name is required").optional(),
-  phone: z.string().optional(),
-  avatar: z.string().optional(),
+  userName: z.string().min(1, "Username is required").optional(),
+  email: z.string().email("Invalid email").optional(),
+  role: roleSchema.optional(),
 });
 
 export const UpdatePasswordBody = z.object({
@@ -31,15 +31,10 @@ export type UpdateUserBodyType = z.infer<typeof UpdateUserBody>;
 export type UpdatePasswordBodyType = z.infer<typeof UpdatePasswordBody>;
 
 export type UserType = {
-  _id: string;
+  userId: number;
+  userName: string;
   email: string;
-  name: string;
-  phone: string;
-  avatar: string;
-  status: boolean;
-  createdAt: string;
-  updatedAt: string;
-  isDeleted: boolean;
+  role: "ADMIN" | "SUPERVISOR" | "No Role Assigned";
 };
 
 export type UserResType = {
@@ -56,7 +51,7 @@ export type UserListResType = {
   payload: {
     data: {
       meta: {
-        current: number;
+        page: number;
         pageSize: number;
         pages: number;
         total: number;

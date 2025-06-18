@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,50 +22,43 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import {
-  UpdateUserBodyType,
-  UpdateUserBody,
-} from "@/schemaValidations/account.schema";
-import { useGetUser, useUpdateUserMutation } from "@/queries/useAccount";
+  UpdateAssessmentBodyType,
+  UpdateAssessmentBody,
+} from "@/schemaValidations/assessment.schema";
+import {
+  useGetAssessment,
+  useUpdateAssessmentMutation,
+} from "@/queries/useAssessment";
 
-type EditUserProps = {
+type EditAssessmentProps = {
   id: number | undefined;
   setId: (value: number | undefined) => void;
   onSubmitSuccess?: () => void;
 };
 
-export default function EditUser({
+export default function EditAssessment({
   id,
   setId,
   onSubmitSuccess,
-}: EditUserProps) {
-  const t = useTranslations("ManageUsers");
-  const { data, isLoading } = useGetUser({ id: id || 0, enabled: !!id });
-  const updateUserMutation = useUpdateUserMutation();
+}: EditAssessmentProps) {
+  const t = useTranslations("ManageAssessments");
+  const { data, isLoading } = useGetAssessment({ id: id || 0, enabled: !!id });
+  const updateAssessmentMutation = useUpdateAssessmentMutation();
 
-  const form = useForm<UpdateUserBodyType>({
-    resolver: zodResolver(UpdateUserBody),
+  const form = useForm<UpdateAssessmentBodyType>({
+    resolver: zodResolver(UpdateAssessmentBody),
     defaultValues: {
-      userName: "",
-      email: "",
-      role: {
-        roleId: "1",
-      },
+      criteriaName: "",
+      description: "",
     },
   });
 
   useEffect(() => {
-    if (data?.payload.data) {
-      const { userName, email, role } = data.payload.data;
-      form.reset({ userName, email, role });
+    if (data?.data) {
+      const { criteriaName, description } = data.data;
+      form.reset({ criteriaName, description });
     }
   }, [data, form]);
 
@@ -74,21 +67,18 @@ export default function EditUser({
     setId(undefined);
   };
 
-  const onSubmit = async (values: UpdateUserBodyType) => {
-    if (updateUserMutation.isPending || !id) return;
+  const onSubmit = async (values: UpdateAssessmentBodyType) => {
+    if (updateAssessmentMutation.isPending || !id) return;
     try {
-      await updateUserMutation.mutateAsync({ id, body: values });
+      await updateAssessmentMutation.mutateAsync({ id, body: values });
       toast({
-        description: t("UpdateSuccess", { email: values.email }),
+        description: t("UpdateSuccess", { criteriaName: values.criteriaName }),
       });
       reset();
       onSubmitSuccess?.();
     } catch (error) {
       handleErrorApi({ error, setError: form.setError });
-      toast({
-        description: t("UpdateError"),
-        variant: "destructive",
-      });
+      toast({ description: t("UpdateError"), variant: "destructive" });
       console.error("Form submission error:", error);
     }
   };
@@ -97,19 +87,15 @@ export default function EditUser({
     <Dialog
       open={Boolean(id)}
       onOpenChange={(value) => {
-        if (!value) {
-          reset();
-        }
+        if (!value) reset();
       }}
     >
       <DialogContent
         className="sm:max-w-[600px] max-h-screen overflow-auto"
-        onCloseAutoFocus={() => {
-          reset();
-        }}
+        onCloseAutoFocus={reset}
       >
         <DialogHeader>
-          <DialogTitle>{t("UpdateUser")}</DialogTitle>
+          <DialogTitle>{t("UpdateAssessment")}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <div className="flex items-center justify-center p-4">
@@ -119,7 +105,7 @@ export default function EditUser({
         ) : (
           <Form {...form}>
             <form
-              id="edit-user-form"
+              id="edit-assessment-form"
               onSubmit={form.handleSubmit(onSubmit, (errors) => {
                 console.log("Form errors:", errors);
               })}
@@ -127,26 +113,13 @@ export default function EditUser({
             >
               <FormField
                 control={form.control}
-                name="email"
+                name="criteriaName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("Email")}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t("EmailPlaceholder")} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="userName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("Username")}</FormLabel>
+                    <FormLabel>{t("CriteriaName")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("UsernamePlaceholder")}
+                        placeholder={t("CriteriaNamePlaceholder")}
                         {...field}
                       />
                     </FormControl>
@@ -156,25 +129,16 @@ export default function EditUser({
               />
               <FormField
                 control={form.control}
-                name="role.roleId"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("Role")}</FormLabel>
-                    <Select onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("SelectRole")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem key="admin" value="1">
-                          ADMIN
-                        </SelectItem>
-                        <SelectItem key="supervisor" value="2">
-                          SUPERVISOR
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>{t("Description")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t("DescriptionPlaceholder")}
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -185,10 +149,10 @@ export default function EditUser({
         <DialogFooter>
           <Button
             type="submit"
-            form="edit-user-form"
-            disabled={updateUserMutation.isPending || isLoading}
+            form="edit-assessment-form"
+            disabled={updateAssessmentMutation.isPending || isLoading}
           >
-            {updateUserMutation.isPending ? (
+            {updateAssessmentMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("Submitting")}

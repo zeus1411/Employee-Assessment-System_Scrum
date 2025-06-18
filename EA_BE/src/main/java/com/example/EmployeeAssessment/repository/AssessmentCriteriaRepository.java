@@ -9,5 +9,6 @@ import com.example.EmployeeAssessment.domain.AssessmentCriteria;
 @Repository
 public interface AssessmentCriteriaRepository extends JpaRepository<AssessmentCriteria, Long>,
         JpaSpecificationExecutor<AssessmentCriteria> {
+    boolean existsByCriteriaName(String criteriaName);
 
 }

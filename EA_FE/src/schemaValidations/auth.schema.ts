@@ -15,7 +15,7 @@ export const RegisterBody = z
 export type RegisterBodyType = z.infer<typeof RegisterBody>;
 export const LoginBody = z
   .object({
-    username: z.string().min(1, { message: "required" }).email({
+    email: z.string().min(1, { message: "required" }).email({
       message: "invalidEmail",
     }),
     password: z.string().min(6, { message: "invalidPassword" }).max(100),
@@ -35,27 +35,9 @@ export const LoginRes = z.object({
       email: z.string(),
       name: z.string(),
       role: z.object({
-        id: z.number(),
-        name: z.string(),
+        roleId: z.number(),
+        roleName: z.string(),
         description: z.string(),
-        active: z.boolean(),
-        createdAt: z.string(),
-        updatedAt: z.string().nullable(),
-        createdBy: z.string(),
-        updatedBy: z.string().nullable(),
-        permissions: z.array(
-          z.object({
-            id: z.number(),
-            name: z.string(),
-            apiPath: z.string(),
-            method: z.string(),
-            module: z.string(),
-            createdAt: z.string(),
-            updatedAt: z.string().nullable(),
-            createdBy: z.string(),
-            updatedBy: z.string().nullable(),
-          })
-        ),
       }),
     }),
   }),
