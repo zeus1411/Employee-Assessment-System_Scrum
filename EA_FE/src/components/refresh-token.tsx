@@ -3,11 +3,8 @@
 // import authApiRequest from "@/apiRequests/auth";
 // import socket from "@/lib/socket";
 import {
-  checkAndRefreshToken,
   getAccessTokenFromLocalStorage,
-  getRefreshTokenFromLocalStorage,
   setAccessTokenToLocalStorage,
-  setRefreshTokenToLocalStorage,
 } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,13 +23,13 @@ export default function RefreshToken() {
     let interval: any = null;
     //Phai goi lan dau tien vi interval se chay sau thoi gian time out
     const onRefreshToken = (force?: boolean) => {
-      checkAndRefreshToken({
-        onError: () => {
-          clearInterval(interval);
-          router.push("/login");
-        },
-        force,
-      });
+      // checkAndRefreshToken({
+      //   onError: () => {
+      //     clearInterval(interval);
+      //     router.push("/login");
+      //   },
+      //   force,
+      // });
     };
     onRefreshToken();
     // Time out interval phai be hon thoi gian het han cua access token

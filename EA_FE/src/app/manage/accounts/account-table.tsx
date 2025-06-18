@@ -219,9 +219,9 @@ export default function UserTable() {
     manualPagination: true,
   });
 
-  useEffect(() => {
-    if (!isAuth) router.push("/login");
-  }, [isAuth, router]);
+  // useEffect(() => {
+  //   if (!isAuth) router.push("/login");
+  // }, [isAuth, router]);
 
   const goToPage = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {

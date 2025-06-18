@@ -18,21 +18,6 @@ interface Permission {
   module: string;
 }
 
-// Mapping of href to module for permission checking
-const hrefToModuleMap: Record<string, string> = {
-  "/manage/dashboard": "REVENUE",
-  "/manage/bookings": "BOOKINGS",
-  "/manage/trains": "TRAINS",
-  "/manage/carriages": "CARRIAGES",
-  "/manage/stations": "STATIONS",
-  "/manage/trainTrips": "TRAIN_TRIPS",
-  "/manage/promotions": "PROMOTIONS",
-  "/manage/articles": "ARTICLES",
-  "/manage/accounts": "ACCOUNTS",
-  "/manage/roles": "ROLES",
-  "/manage/permissions": "PERMISSIONS",
-};
-
 export default function MobileNavLinks() {
   const pathname = usePathname();
 
@@ -53,7 +38,7 @@ export default function MobileNavLinks() {
             <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
             <span className="sr-only">Acme Inc</span>
           </Link>
-          {accessibleMenuItems.map((item: any, index: number) => {
+          {/* {accessibleMenuItems.map((item: any, index: number) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -71,7 +56,7 @@ export default function MobileNavLinks() {
                 {item.title}
               </Link>
             );
-          })}
+          })} */}
         </nav>
       </SheetContent>
     </Sheet>

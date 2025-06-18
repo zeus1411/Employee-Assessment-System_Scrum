@@ -57,18 +57,18 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) {
-        // return this.authService.login(loginDto);
         // Nạp input gồm username/password vào Security
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 loginDto.getEmail(), loginDto.getPassword());
 
-        // xác thực người dùng => cần viết hàm loadUserByUsername
+        // Xác thực người dùng
         Authentication authentication = authenticationManagerBuilder.getObject()
                 .authenticate(authenticationToken);
 
-        // set thông tin người dùng đăng nhập vào context (có thể sử dụng sau này)
+        // Set thông tin người dùng đăng nhập vào context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // Tạo ResLoginDTO
         ResLoginDTO res = new ResLoginDTO();
         User currentUserDB = this.userService.handleGetUserByUsername(loginDto.getEmail());
         if (currentUserDB != null) {
@@ -80,21 +80,22 @@ public class AuthController {
             res.setUser(userLogin);
         }
 
-        // create access token
+        // Tạo access token
         String access_token = this.securityUtil.createAccessToken(loginDto.getEmail(), res);
         res.setAccessToken(access_token);
 
-        // create refresh token
+        // Tạo refresh token
         String refresh_token = this.securityUtil.createRefreshToken(loginDto.getEmail(), res);
+        res.setRefreshToken(refresh_token); // Thêm refresh token vào JSON
 
-        // update user
+        // Cập nhật user
         this.userService.updateUserToken(refresh_token, loginDto.getEmail());
 
-        // set cookies
+        // Set cookies
         ResponseCookie resCookies = ResponseCookie
                 .from("refresh_token", refresh_token)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) // Tạm thời đặt false để test trên localhost
                 .path("/")
                 .maxAge(refreshTokenExpiration)
                 .build();

@@ -40,34 +40,34 @@ const hrefToModuleMap: Record<string, string> = {
 
 export default function NavLinks() {
   const pathname = usePathname();
-  const { data, isLoading, isError, error } = useAccountProfile();
-  console.log(">>>>", data); // Log data for debugging
-  const account = data?.data?.user;
-  const userPermissions = account?.role?.permissions as
-    | Permission[]
-    | undefined;
+  // const { data, isLoading, isError, error } = useAccountProfile();
+  // console.log(">>>>", data); // Log data for debugging
+  // const account = data?.data?.user;
+  // const userPermissions = account?.role?.permissions as
+  //   | Permission[]
+  //   | undefined;
 
-  // Filter menu items based on permissions
-  const accessibleMenuItems = menuItems.filter((item: any) => {
-    if (isLoading || isError || !userPermissions) return true; // Show all during loading or if permissions are unavailable
-    const requiredModule = hrefToModuleMap[item.href];
-    return (
-      !requiredModule ||
-      userPermissions.some((permission) => permission.module === requiredModule)
-    );
-  });
+  // // Filter menu items based on permissions
+  // const accessibleMenuItems = menuItems.filter((item: any) => {
+  //   if (isLoading || isError || !userPermissions) return true; // Show all during loading or if permissions are unavailable
+  //   const requiredModule = hrefToModuleMap[item.href];
+  //   return (
+  //     !requiredModule ||
+  //     userPermissions.some((permission) => permission.module === requiredModule)
+  //   );
+  // });
 
-  if (isLoading) {
-    return <div></div>; // Loading state
-  }
+  // if (isLoading) {
+  //   return <div></div>; // Loading state
+  // }
 
-  if (isError) {
-    console.error("Account profile error:", {
-      error,
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
-    return <div></div>; // Error state
-  }
+  // if (isError) {
+  //   console.error("Account profile error:", {
+  //     error,
+  //     message: error instanceof Error ? error.message : "Unknown error",
+  //   });
+  //   return <div></div>; // Error state
+  // }
 
   return (
     <TooltipProvider>
@@ -81,7 +81,7 @@ export default function NavLinks() {
             <span className="sr-only">Acme Inc</span>
           </Link>
 
-          {accessibleMenuItems.map((item: any, index: number) => {
+          {/* {accessibleMenuItems.map((item: any, index: number) => {
             const isActive = pathname === item.href;
             return (
               <Tooltip key={index}>
@@ -103,7 +103,7 @@ export default function NavLinks() {
                 <TooltipContent side="right">{item.title}</TooltipContent>
               </Tooltip>
             );
-          })}
+          })} */}
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
           <Tooltip>
