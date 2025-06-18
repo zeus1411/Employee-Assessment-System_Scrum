@@ -25,14 +25,13 @@ public class User {
     private String userName;
     private String password;
     private String email;
+    private String accessToken;
+    private String refreshToken;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = true)
     private Role role;
 
-    @OneToOne
-    @JoinColumn(name = "token_id", nullable = false)
-    private Token token;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
