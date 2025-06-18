@@ -1,8 +1,8 @@
 {
   "HomePage": {
-    "title": "RailSkyLines !",
-    "description": "Đặt vé dễ dàng, hành trình suôn sẻ!",
-    "defaultTitle": "RailSkyLines !",
+    "title": "Hệ thống đánh giá nhân viên",
+    "description": "Đánh giá minh bạch, phát triển vững mạnh",
+    "defaultTitle": "Employee-Assessment-System !",
     "diversity": "Đa dạng loại vé",
     "Code": "Mã khuyến mãi",
     "Discount": "Giảm giá",
@@ -82,8 +82,8 @@
     "Verification code must be 6 characters": "Mã xác minh phải có đúng 6 ký tự."
   },
   "NavItem": {
-    "FindTicket": "Tìm vé",
-    "BookingInfo": "Thông tin đặt vé",
+    "FindTicket": "Người Dùng",
+    "BookingInfo": "Đánh giá",
     "ReturnTicket": "Trả vé",
     "Promotion": "Khuyến mãi",
     "Term&Conditions": "Điều khoản & Điều kiện",
@@ -685,7 +685,7 @@
   },
   "common": {
     "BookingInfo": {
-      "title": "KIỂM TRA THÔNG TIN ĐẶT VÉ",
+      "title": "Đánh giá",
       "description": "Để kiểm tra thông tin, vui lòng điền các chi tiết dưới đây.",
       "labels": {
         "bookingId": "Mã đặt vé *",

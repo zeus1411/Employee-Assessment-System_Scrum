@@ -1,8 +1,8 @@
 {
   "HomePage": {
-    "title": "RailSkyLines !",
-    "description": "Easy ticket booking, smooth journey!",
-    "defaultTitle": "RailSkyLines !",
+    "title": "Employee-Assessment-System",
+    "description": "Transparent assessment, sustainable development",
+    "defaultTitle": "Employee-Assessment-System !",
     "diversity": "Variety of ticket types",
     "Code": "Code of Promotion",
     "Discount": "Discount",
@@ -82,8 +82,8 @@
     "Verification code must be 6 characters": "Verification code must be exactly 6 characters."
   },
   "NavItem": {
-    "FindTicket": "Search Ticket",
-    "BookingInfo": "Booking Info",
+    "FindTicket": "Accounts",
+    "BookingInfo": "Assessment",
     "ReturnTicket": "Return Ticket",
     "Promotion": "Promotion",
     "Term&Conditions": "Term & Conditions",
@@ -691,7 +691,7 @@
   },
   "common": {
     "BookingInfo": {
-      "title": "CHECK BOOKING INFORMATION",
+      "title": "Assessment",
       "description": "To check information, please fill in the details below.",
       "labels": {
         "bookingId": "Booking Code *",

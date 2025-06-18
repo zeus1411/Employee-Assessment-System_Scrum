@@ -83,7 +83,7 @@ export const useDeleteUserMutation = () => {
   });
 };
 
-export const useUserProfile = () => {
+export const useAccountProfile = () => {
   return useQuery({
     queryKey: ["user-profile"],
     queryFn: userApiRequest.me,
