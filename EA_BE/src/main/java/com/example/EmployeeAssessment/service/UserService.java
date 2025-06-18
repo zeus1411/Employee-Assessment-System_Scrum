@@ -39,9 +39,6 @@ public class UserService {
         return savedUser;
     }
 
-<<<<<<< HEAD
-    // Convert User to UserReponseDTO
-=======
     public UserReponseDTO handleUpdateUser(Long userId, ReqUpdateUserDTO updatedUser) throws IdInvalidException {
         User existingUser = this.userRepository.findById(userId)
                 .orElseThrow(() -> new IdInvalidException("User not found with id: " + userId));
@@ -99,7 +96,6 @@ public class UserService {
         this.userRepository.deleteById(userId);
     }
 
->>>>>>> eab59e0f882256de36d08a6814f560e9fde1f609
     public UserReponseDTO convertToUserReponseDTO(User user) {
         UserReponseDTO userResponse = new UserReponseDTO();
         userResponse.setUserId(user.getUserId());
@@ -108,7 +104,6 @@ public class UserService {
         userResponse.setRole(user.getRole() != null ? user.getRole().getRoleName() : "No Role Assigned");
         return userResponse;
     }
-<<<<<<< HEAD
 
     public User handleGetUserByUsername(String username) {
         return this.userRepository.findByEmail(username);
@@ -126,6 +121,3 @@ public class UserService {
         return this.userRepository.findByRefreshTokenAndEmail(token, email);
     }
 }
-=======
-}
->>>>>>> eab59e0f882256de36d08a6814f560e9fde1f609
