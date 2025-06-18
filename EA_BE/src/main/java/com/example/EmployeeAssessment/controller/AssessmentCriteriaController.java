@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.turkraft.springfilter.boot.Filter;
 
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
-import com.example.EmployeeAssessment.domain.response.ResultPaginationDTO;
+import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
 import com.example.EmployeeAssessment.service.AssessmentCriteriaService;
 
 @RestController

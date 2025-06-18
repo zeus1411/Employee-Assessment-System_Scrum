@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
-import com.example.EmployeeAssessment.domain.response.ResultPaginationDTO;
+import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
 import com.example.EmployeeAssessment.repository.AssessmentCriteriaRepository;
 
 @Service
