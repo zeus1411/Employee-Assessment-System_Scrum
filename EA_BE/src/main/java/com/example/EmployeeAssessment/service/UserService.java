@@ -33,7 +33,8 @@ public class UserService {
         User savedUser = userRepository.save(newUser);
         return savedUser;
     }
-        // Convert User to UserReponseDTO
+
+    // Convert User to UserReponseDTO
     public UserReponseDTO convertToUserReponseDTO(User user) {
         UserReponseDTO userResponse = new UserReponseDTO();
         userResponse.setUserId(user.getUserId());
@@ -41,5 +42,21 @@ public class UserService {
         userResponse.setEmail(user.getEmail());
         userResponse.setRole(user.getRole() != null ? user.getRole().getRoleName() : "No Role Assigned");
         return userResponse;
+    }
+
+    public User handleGetUserByUsername(String username) {
+        return this.userRepository.findByEmail(username);
+    }
+
+    public void updateUserToken(String token, String email) {
+        User currentUser = this.handleGetUserByUsername(email);
+        if (currentUser != null) {
+            currentUser.setRefreshToken(token);
+            this.userRepository.save(currentUser);
+        }
+    }
+
+    public User getUserByRefreshTokenAndEmail(String token, String email) {
+        return this.userRepository.findByRefreshTokenAndEmail(token, email);
     }
 }

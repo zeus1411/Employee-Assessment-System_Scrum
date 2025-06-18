@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -44,16 +46,17 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByUserName(username)
-                .map(user -> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUserName())
-                        .password(user.getPassword())
-                        .authorities(user.getRole().getRoleName())
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-    }
+    // @Bean
+    // public UserDetailsService userDetailsService(UserRepository userRepository) {
+    // return username -> userRepository.findByUserName(username)
+    // .map(user -> org.springframework.security.core.userdetails.User
+    // .withUsername(user.getUserName())
+    // .password(user.getPassword())
+    // .authorities(user.getRole().getRoleName())
+    // .build())
+    // .orElseThrow(() -> new UsernameNotFoundException("User not found: " +
+    // username));
+    // }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
@@ -140,4 +143,5 @@ public class SecurityConfiguration {
             }
         };
     }
+
 }
