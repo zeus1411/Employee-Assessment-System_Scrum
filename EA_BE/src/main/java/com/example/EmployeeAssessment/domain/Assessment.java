@@ -3,21 +3,22 @@ package com.example.EmployeeAssessment.domain;
 import java.time.Instant;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
 @Table(name = "assessments")
-@Getter
-@Setter
+@Data
 public class Assessment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +33,10 @@ public class Assessment {
     private User user;
 
     @ManyToMany
-    @JoinColumn(name = "assessment_criteria_id", nullable = false)
+    @JsonIgnore
+    @JoinTable(name = "assessment_criteria_mapping", // Tên bảng liên kết
+            joinColumns = @JoinColumn(name = "assessment_id"), // Cột liên kết với Assessment
+            inverseJoinColumns = @JoinColumn(name = "assessment_criteria_id") // Cột liên kết với AssessmentCriteria
+    )
     private List<AssessmentCriteria> assessmentCriteria;
 }
