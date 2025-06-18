@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.turkraft.springfilter.boot.Filter;
 
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
-<<<<<<< HEAD
-import com.example.EmployeeAssessment.domain.response.ResultPaginationDTO;
-=======
 import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4
 import com.example.EmployeeAssessment.service.AssessmentCriteriaService;
 
 @RestController
@@ -40,11 +36,7 @@ public class AssessmentCriteriaController {
 
     @GetMapping("/assessment-criteria")
     // @ApiMessage("Fetch assessment-criteria")
-<<<<<<< HEAD
-    public ResponseEntity<ResultPaginationDTO> getAssessmentCriteria(
-=======
     public ResponseEntity<ResultPaginationDTO> getCompany(
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4
             @Filter Specification<AssessmentCriteria> spec, Pageable pageable) {
 
         return ResponseEntity.ok(this.assessmentCriteriaService
@@ -64,8 +56,4 @@ public class AssessmentCriteriaController {
         return ResponseEntity.ok()
                 .body("Assessment Criteria with ID " + assessmentCriteriaId + " deleted successfully.");
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4

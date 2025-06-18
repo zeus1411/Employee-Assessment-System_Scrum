@@ -8,10 +8,6 @@ import com.example.EmployeeAssessment.domain.AssessmentCriteria;
 
 @Repository
 public interface AssessmentCriteriaRepository extends JpaRepository<AssessmentCriteria, Long>,
-        JpaSpecificationExecutor<AssessmentCriteria> {
+                JpaSpecificationExecutor<AssessmentCriteria> {
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4

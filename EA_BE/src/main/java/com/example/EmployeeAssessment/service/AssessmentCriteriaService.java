@@ -8,11 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
-<<<<<<< HEAD
-import com.example.EmployeeAssessment.domain.response.ResultPaginationDTO;
-=======
 import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4
 import com.example.EmployeeAssessment.repository.AssessmentCriteriaRepository;
 
 @Service
@@ -66,8 +62,4 @@ public class AssessmentCriteriaService {
             this.assessmentCriteriaRepository.delete(assessmentCriteriaOptional.get());
     }
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a959392aeb01b617b1007baf6109415bce2f9cb4
