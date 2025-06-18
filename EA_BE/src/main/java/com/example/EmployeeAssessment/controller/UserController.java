@@ -18,6 +18,7 @@ import com.example.EmployeeAssessment.domain.response.UserReponseDTO;
 import com.example.EmployeeAssessment.repository.UserRepository;
 import com.example.EmployeeAssessment.service.UserService;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
+import com.example.EmployeeAssessment.domain.response.RestResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,22 @@ public class UserController {
             return ResponseEntity.ok(this.userService.convertToUserReponseDTO(user));
         } catch (IdInvalidException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<RestResponse<Void>> deleteUser(@PathVariable Long userId) {
+        RestResponse<Void> response = new RestResponse<>();
+        try {
+            userService.handleDeleteUser(userId);
+            response.setStatusCode(HttpStatus.OK.value());
+            response.setMessage("User deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (IdInvalidException e) {
+            response.setStatusCode(HttpStatus.NOT_FOUND.value());
+            response.setError(e.getMessage());
+            response.setMessage("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 }
