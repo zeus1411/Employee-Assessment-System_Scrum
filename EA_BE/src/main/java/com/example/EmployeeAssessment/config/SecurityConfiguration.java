@@ -1,24 +1,19 @@
 package com.example.EmployeeAssessment.config;
 
-import com.example.EmployeeAssessment.domain.Role;
-import com.example.EmployeeAssessment.domain.User;
-import com.example.EmployeeAssessment.repository.RoleRepository;
-import com.example.EmployeeAssessment.repository.UserRepository;
 import com.example.EmployeeAssessment.util.SecurityUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.security.config.Customizer;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -31,6 +26,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Collection;
 
 @Configuration
 @EnableWebSecurity
@@ -45,18 +41,6 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    // @Bean
-    // public UserDetailsService userDetailsService(UserRepository userRepository) {
-    // return username -> userRepository.findByUserName(username)
-    // .map(user -> org.springframework.security.core.userdetails.User
-    // .withUsername(user.getUserName())
-    // .password(user.getPassword())
-    // .authorities(user.getRole().getRoleName())
-    // .build())
-    // .orElseThrow(() -> new UsernameNotFoundException("User not found: " +
-    // username));
-    // }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
@@ -64,7 +48,6 @@ public class SecurityConfiguration {
                 "/",
                 "/api/v1/auth/login",
                 "/api/v1/auth/refresh",
-                "/api/v1/users/**",
                 "/resources/**",
                 "/css/**",
                 "/js/**"
@@ -72,17 +55,34 @@ public class SecurityConfiguration {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
+                .cors(cors -> {
+                }) // enable CORS with default config
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(whiteList).permitAll()
+                        .requestMatchers("/api/v1/assessments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/assessment-criteria")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR")
+                        .requestMatchers("/api/v1/assessment-criteria/**").hasAnyAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v1/teams/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
-                .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        String[] whiteList = {
+                "/",
+                "/api/v1/auth/login",
+                "/resources/**",
+                "/css/**",
+                "/js/**"
+        };
+        return (web) -> web.ignoring().requestMatchers(whiteList);
     }
 
     @Bean
@@ -92,22 +92,20 @@ public class SecurityConfiguration {
         grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> authorities = grantedAuthoritiesConverter.convert(jwt);
+            System.out.println("Authorities: " + authorities); // Debug quyền
+            return authorities;
+        });
+
         return jwtAuthenticationConverter;
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
-                getSecretKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
-        return token -> {
-            try {
-                return jwtDecoder.decode(token);
-            } catch (Exception e) {
-                System.err.println("JWT error: " + e.getMessage());
-                throw e;
-            }
-        };
+        return NimbusJwtDecoder.withSecretKey(getSecretKey())
+                .macAlgorithm(SecurityUtil.JWT_ALGORITHM)
+                .build();
     }
 
     @Bean
@@ -119,30 +117,4 @@ public class SecurityConfiguration {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
     }
-
-    @Bean
-    public CommandLineRunner initAdminUser(UserRepository userRepository, RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder) {
-        return args -> {
-            // Check if ADMIN role exists, create if not
-            Role adminRole = roleRepository.findByRoleName("ADMIN")
-                    .orElseGet(() -> {
-                        Role newRole = new Role();
-                        newRole.setRoleName("ADMIN");
-                        newRole.setDescription("Administrator role with full access");
-                        return roleRepository.save(newRole);
-                    });
-
-            // Check if admin user exists, create if not
-            if (userRepository.findByUserName("admin").isEmpty()) {
-                User admin = new User();
-                admin.setUserName("admin");
-                admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setEmail("admin@example.com");
-                admin.setRole(adminRole);
-                userRepository.save(admin);
-            }
-        };
-    }
-
 }
