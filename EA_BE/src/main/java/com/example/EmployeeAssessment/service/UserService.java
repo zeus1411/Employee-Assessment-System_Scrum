@@ -72,4 +72,11 @@ public class UserService {
         userResponse.setRole(user.getRole() != null ? user.getRole().getRoleName() : "No Role Assigned");
         return userResponse;
     }
+
+    public void handleDeleteUser(Long userId) throws IdInvalidException {
+        if (!userRepository.existsById(userId)) {
+            throw new IdInvalidException("User not found with id: " + userId);
+        }
+        userRepository.deleteById(userId);
+    }
 }
