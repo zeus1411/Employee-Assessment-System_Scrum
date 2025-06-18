@@ -1,16 +1,23 @@
 package com.example.EmployeeAssessment.config;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
+import com.example.EmployeeAssessment.domain.Role;
+import com.example.EmployeeAssessment.domain.User;
+import com.example.EmployeeAssessment.repository.RoleRepository;
+import com.example.EmployeeAssessment.repository.UserRepository;
+import com.example.EmployeeAssessment.util.SecurityUtil;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -21,11 +28,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.example.EmployeeAssessment.util.SecurityUtil;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.nimbusds.jose.util.Base64;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
+@EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
 
@@ -38,32 +45,37 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            customAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUserName(username)
+                .map(user -> org.springframework.security.core.userdetails.User
+                        .withUsername(user.getUserName())
+                        .password(user.getPassword())
+                        .authorities(user.getRole().getRoleName())
+                        .build())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
 
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whiteList = {
                 "/",
                 "/api/v1/auth/login",
-
+                "/resources/**",
+                "/css/**",
+                "/js/**"
         };
 
         http
-                .csrf(c -> c.disable())
+                .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(
-                        authz -> authz
-                                .requestMatchers(whiteList).permitAll()
-
-                                .anyRequest().authenticated())
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(whiteList).permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
-                // .exceptionHandling(
-                // exceptions -> exceptions
-                // .authenticationEntryPoint(customAuthenticationEntryPoint) // 401
-                // .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) // 403
-
-                .formLogin(f -> f.disable())
+                .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
@@ -88,7 +100,7 @@ public class SecurityConfiguration {
             try {
                 return jwtDecoder.decode(token);
             } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
+                System.err.println("JWT error: " + e.getMessage());
                 throw e;
             }
         };
@@ -101,7 +113,31 @@ public class SecurityConfiguration {
 
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
-        return new SecretKeySpec(keyBytes, 0, keyBytes.length,
-                SecurityUtil.JWT_ALGORITHM.getName());
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
+    }
+
+    @Bean
+    public CommandLineRunner initAdminUser(UserRepository userRepository, RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder) {
+        return args -> {
+            // Check if ADMIN role exists, create if not
+            Role adminRole = roleRepository.findByRoleName("ADMIN")
+                    .orElseGet(() -> {
+                        Role newRole = new Role();
+                        newRole.setRoleName("ADMIN");
+                        newRole.setDescription("Administrator role with full access");
+                        return roleRepository.save(newRole);
+                    });
+
+            // Check if admin user exists, create if not
+            if (userRepository.findByUserName("admin").isEmpty()) {
+                User admin = new User();
+                admin.setUserName("admin");
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setEmail("admin@example.com");
+                admin.setRole(adminRole);
+                userRepository.save(admin);
+            }
+        };
     }
 }
