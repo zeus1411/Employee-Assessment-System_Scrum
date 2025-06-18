@@ -36,7 +36,7 @@ public class AssessmentCriteriaController {
 
     @GetMapping("/assessment-criteria")
     // @ApiMessage("Fetch assessment-criteria")
-    public ResponseEntity<ResultPaginationDTO> getCompany(
+    public ResponseEntity<ResultPaginationDTO> getAssessmentCriteria(
             @Filter Specification<AssessmentCriteria> spec, Pageable pageable) {
 
         return ResponseEntity.ok(this.assessmentCriteriaService
