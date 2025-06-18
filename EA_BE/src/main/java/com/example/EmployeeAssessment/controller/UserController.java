@@ -1,34 +1,25 @@
 package com.example.EmployeeAssessment.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
 import com.example.EmployeeAssessment.domain.User;
-import com.example.EmployeeAssessment.domain.request.ReqLoginDTO;
 import com.example.EmployeeAssessment.domain.request.ReqUpdateUserDTO;
 import com.example.EmployeeAssessment.domain.response.UserReponseDTO;
-import com.example.EmployeeAssessment.repository.UserRepository;
 import com.example.EmployeeAssessment.service.UserService;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
-import com.example.EmployeeAssessment.domain.response.RestResponse;
-
+import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @PostMapping("/users")
     public ResponseEntity<UserReponseDTO> createNewUser(@Valid @RequestBody User newUser) {
@@ -40,8 +31,9 @@ public class UserController {
         }
     }
 
-    @PutMapping("/users/{userId}")
-    public ResponseEntity<UserReponseDTO> updateUser(@PathVariable Long userId, @Valid @RequestBody ReqUpdateUserDTO updatedUser) {
+    @PutMapping("/users/{id}")
+    public ResponseEntity<UserReponseDTO> updateUser(@PathVariable("id") Long userId,
+            @Valid @RequestBody ReqUpdateUserDTO updatedUser) {
         try {
             UserReponseDTO updated = this.userService.handleUpdateUser(userId, updatedUser);
             return ResponseEntity.ok(updated);
@@ -50,8 +42,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<UserReponseDTO> getUser(@PathVariable Long userId) {
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserReponseDTO> getUser(@PathVariable("id") Long userId) {
         try {
             User user = this.userService.getUserById(userId);
             return ResponseEntity.ok(this.userService.convertToUserReponseDTO(user));
@@ -60,19 +52,20 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/users/{userId}")
-    public ResponseEntity<RestResponse<Void>> deleteUser(@PathVariable Long userId) {
-        RestResponse<Void> response = new RestResponse<>();
+    @GetMapping("/users")
+    public ResponseEntity<ResultPaginationDTO> getAllUsers(
+            @Filter Specification<User> spec,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.userService.handleFetchAllUsers(spec, pageable));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long userId) {
         try {
-            userService.handleDeleteUser(userId);
-            response.setStatusCode(HttpStatus.OK.value());
-            response.setMessage("User deleted successfully");
-            return ResponseEntity.ok(response);
+            this.userService.handleDeleteUser(userId);
+            return ResponseEntity.ok().build();
         } catch (IdInvalidException e) {
-            response.setStatusCode(HttpStatus.NOT_FOUND.value());
-            response.setError(e.getMessage());
-            response.setMessage("User not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }
