@@ -153,7 +153,7 @@ export default function UserTable() {
   // Fetch user list
   const userListQuery = useGetUserList(page, pageSize);
   const data = userListQuery.data?.payload.data.result ?? [];
-  const totalItems = assessmentListQuery.data?.data.meta.total ?? 0;
+  const totalItems = userListQuery.data?.payload.data.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
   const columns: ColumnDef<UserType>[] = [

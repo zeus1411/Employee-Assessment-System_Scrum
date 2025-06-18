@@ -90,10 +90,14 @@ function AlertDialogDeleteAssessment({
   const deleteAssessment = async () => {
     if (assessmentDelete) {
       try {
+        console.log("ladasda sda sd asd asd sasdd asd asd asd ");
+
         await mutateAsync(assessmentDelete.assessmentCriteriaId);
+        console.log("asdasdasdasdsa", assessmentDelete);
+        console.log("assessDelete", assessmentDelete.assessmentCriteriaId);
         setAssessmentDelete(null);
-        toast({ description: t("DeleteSuccess") });
-        onSuccess?.();
+        // toast({ description: t("DeleteSuccess") });
+        // onSuccess?.();
       } catch (error) {
         handleErrorApi({ error });
       }
@@ -145,7 +149,6 @@ export default function AssessmentTable() {
 
   const assessmentListQuery = useAssessmentList(page, pageSize);
   const data = assessmentListQuery.data?.payload.data.result ?? [];
-  console.log("sadasdasdasd data", assessmentListQuery.data);
   const totalItems = assessmentListQuery.data?.payload.data.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 

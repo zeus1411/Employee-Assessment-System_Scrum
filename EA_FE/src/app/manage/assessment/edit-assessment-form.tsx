@@ -31,6 +31,7 @@ import {
   useGetAssessment,
   useUpdateAssessmentMutation,
 } from "@/queries/useAssessment";
+import { da } from "date-fns/locale";
 
 type EditAssessmentProps = {
   id: number | undefined;
@@ -56,8 +57,8 @@ export default function EditAssessment({
   });
 
   useEffect(() => {
-    if (data?.data) {
-      const { criteriaName, description } = data.data;
+    if (data) {
+      const { criteriaName, description } = data.payload.data;
       form.reset({ criteriaName, description });
     }
   }, [data, form]);

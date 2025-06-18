@@ -74,6 +74,7 @@ public class AssessmentCriteriaController {
 
     @DeleteMapping("/assessment-criteria/{id}")
     public ResponseEntity<String> deleteAssessmentCriteria(@PathVariable("id") long assessmentCriteriaId) {
+
         this.assessmentCriteriaService.deleteAssessmentCriteria(assessmentCriteriaId);
         return ResponseEntity.ok()
                 .body("Assessment Criteria with ID " + assessmentCriteriaId + " deleted successfully.");
