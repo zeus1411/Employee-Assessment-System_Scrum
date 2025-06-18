@@ -1,17 +1,16 @@
 package com.example.EmployeeAssessment.domain;
 
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -25,25 +24,30 @@ public class User {
     private String userName;
     private String password;
     private String email;
-    private String accessToken;
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String refreshToken;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = true)
     private Role role;
 
-
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Assessment> assessments;
 
-    // Add self-referencing ManyToOne for manager
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = true)
     private User manager;
 
-    // Optionally, add OneToMany to track subordinates
     @OneToMany(mappedBy = "manager")
     @JsonIgnore
     private List<User> subordinates;
+
+    @ManyToMany(mappedBy = "members")
+    @JsonIgnore
+    private List<Team> teams;
+
+    @OneToMany(mappedBy = "supervisor")
+    @JsonIgnore
+    private List<Team> supervisedTeams; // Thêm mối quan hệ ngược
 }
