@@ -45,12 +45,14 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whiteList = {
-                "/",
-                "/api/v1/auth/login",
-                "/api/v1/auth/refresh",
-                "/resources/**",
-                "/css/**",
-                "/js/**"
+            "/",
+            "/api/v1/auth/login",
+            "/api/v1/users/**",
+            "/api/v1/assessments/**",
+            "/api/v1/auth/refresh",
+            "/resources/**",
+            "/css/**",
+            "/js/**"
         };
 
         http

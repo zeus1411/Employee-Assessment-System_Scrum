@@ -3,6 +3,7 @@ package com.example.EmployeeAssessment.controller;
 import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
 import com.example.EmployeeAssessment.domain.User;
 import com.example.EmployeeAssessment.domain.request.ReqUpdateUserDTO;
+import com.example.EmployeeAssessment.domain.response.RestResponse;
 import com.example.EmployeeAssessment.domain.response.UserReponseDTO;
 import com.example.EmployeeAssessment.service.UserService;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
@@ -22,25 +23,40 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/users")
-    public ResponseEntity<UserReponseDTO> createNewUser(@Valid @RequestBody User newUser) {
+    public ResponseEntity<RestResponse<UserReponseDTO>> createNewUser(@Valid @RequestBody User newUser) {
+        RestResponse<UserReponseDTO> response = new RestResponse<>();
         try {
-            User user = this.userService.handleCreateNewUser(newUser);
-            return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToUserReponseDTO(user));
+            User user = userService.handleCreateNewUser(newUser);
+            UserReponseDTO userResponse = userService.convertToUserReponseDTO(user);
+            response.setStatusCode(HttpStatus.CREATED.value());
+            response.setData(userResponse);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IdInvalidException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            response.setMessage("Invalid user ID"); // Thêm thông báo lỗi nếu cần
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
+
     @PutMapping("/users/{id}")
-    public ResponseEntity<UserReponseDTO> updateUser(@PathVariable("id") Long userId,
+    public ResponseEntity<RestResponse<UserReponseDTO>> updateUser(
+            @PathVariable("id") Long userId,
             @Valid @RequestBody ReqUpdateUserDTO updatedUser) {
+
+        RestResponse<UserReponseDTO> response = new RestResponse<>();
         try {
-            UserReponseDTO updated = this.userService.handleUpdateUser(userId, updatedUser);
-            return ResponseEntity.ok(updated);
+            UserReponseDTO updated = userService.handleUpdateUser(userId, updatedUser);
+            response.setStatusCode(HttpStatus.OK.value());
+            response.setData(updated);
+            return ResponseEntity.ok(response);
         } catch (IdInvalidException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            response.setMessage("Invalid user ID");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
 
     @GetMapping("/users/{id}")
     public ResponseEntity<UserReponseDTO> getUser(@PathVariable("id") Long userId) {
@@ -60,12 +76,18 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long userId) {
+    public ResponseEntity<RestResponse<Void>> deleteUser(@PathVariable("id") Long userId) {
+        RestResponse<Void> response = new RestResponse<>();
         try {
-            this.userService.handleDeleteUser(userId);
-            return ResponseEntity.ok().build();
+            userService.handleDeleteUser(userId);
+            response.setStatusCode(HttpStatus.OK.value());
+            response.setMessage("User deleted successfully");
+            return ResponseEntity.ok(response);
         } catch (IdInvalidException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            response.setMessage("Invalid user ID");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
 }
