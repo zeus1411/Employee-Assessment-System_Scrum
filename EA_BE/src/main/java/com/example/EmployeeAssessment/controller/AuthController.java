@@ -82,7 +82,7 @@ public class AuthController {
         }
 
         // create access token
-        String access_token = this.securityUtil.createAccessToken(authentication.getName(), res);
+        String access_token = this.securityUtil.createAccessToken(loginDto.getEmail(), res);
         res.setAccessToken(access_token);
 
         // create refresh token
