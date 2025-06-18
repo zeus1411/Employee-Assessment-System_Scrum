@@ -2,6 +2,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "EmployeeAssessmentApplication",
+      "request": "launch",
+      "mainClass": "com.example.EmployeeAssessment.EmployeeAssessmentApplication",
+      "projectName": "EA_BE"
+    },
+    {
+      "type": "java",
       "name": "Spring Boot-EmployeeAssessmentApplication<EmployeeAssessment-EA_BE>",
       "request": "launch",
       "cwd": "${workspaceFolder}",
