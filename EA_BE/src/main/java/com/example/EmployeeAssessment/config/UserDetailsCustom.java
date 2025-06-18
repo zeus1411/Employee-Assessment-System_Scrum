@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.EmployeeAssessment.service.UserService;
 
-@Component("userDetailsService")
+@Component("UserDetailsService") // Đổi tên bean để tránh xung đột
 public class UserDetailsCustom implements UserDetailsService {
 
     private final UserService userService;
@@ -25,12 +25,9 @@ public class UserDetailsCustom implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("Username/password không hợp lệ");
         }
-
         return new User(
-                user.getEmail(),
+                user.getUserName(), // Sử dụng userName thay vì email để nhất quán
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-
+                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getRoleName()))); // Gán đúng vai trò
     }
-
 }

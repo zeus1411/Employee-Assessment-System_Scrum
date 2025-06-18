@@ -23,15 +23,18 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Service;
 
-import com.example.EmployeeAssessment.domain.response.login.ResLoginDTO;
+import com.example.EmployeeAssessment.domain.response.auth.ResLoginDTO;
+import com.example.EmployeeAssessment.service.UserService;
 import com.nimbusds.jose.util.Base64;
 
 @Service
 public class SecurityUtil {
     private final JwtEncoder jwtEncoder;
+    private final UserService userService;
 
-    public SecurityUtil(JwtEncoder jwtEncoder) {
+    public SecurityUtil(JwtEncoder jwtEncoder, UserService userService) {
         this.jwtEncoder = jwtEncoder;
+        this.userService = userService;
     }
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
@@ -54,11 +57,26 @@ public class SecurityUtil {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
-        // hardcode permission (for testing)
-        List<String> listAuthority = new ArrayList<String>();
-
-        listAuthority.add("ROLE_USER_CREATE");
-        listAuthority.add("ROLE_USER_UPDATE");
+        // Lấy vai trò từ UserService dựa trên email
+        com.example.EmployeeAssessment.domain.User user = userService.handleGetUserByUsername(email);
+        List<String> listAuthority = new ArrayList<>();
+        if (user != null && user.getRole() != null) {
+            String roleName = user.getRole().getRoleName();
+            System.out.println("Debug: RoleName for " + email + " is " + roleName); // Debug
+            if ("ADMIN".equalsIgnoreCase(roleName)) {
+                listAuthority.add("ROLE_ADMIN");
+            } else if ("SUPERVISOR".equalsIgnoreCase(roleName)) {
+                listAuthority.add("ROLE_SUPERVISOR");
+            }
+            // Thêm quyền mặc định nếu cần
+            listAuthority.add("ROLE_USER_CREATE");
+            listAuthority.add("ROLE_USER_UPDATE");
+        } else {
+            System.out.println("Debug: User or Role not found for " + email); // Debug
+            // Mặc định nếu không tìm thấy người dùng
+            listAuthority.add("ROLE_USER_CREATE");
+            listAuthority.add("ROLE_USER_UPDATE");
+        }
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -71,11 +89,10 @@ public class SecurityUtil {
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
-
     }
 
     public String createRefreshToken(String email, ResLoginDTO dto) {
-ResLoginDTO.UserInsideToken userToken = new ResLoginDTO.UserInsideToken();
+        ResLoginDTO.UserInsideToken userToken = new ResLoginDTO.UserInsideToken();
         userToken.setId(dto.getUser().getId());
         userToken.setEmail(dto.getUser().getEmail());
         userToken.setName(dto.getUser().getName());
@@ -93,26 +110,24 @@ ResLoginDTO.UserInsideToken userToken = new ResLoginDTO.UserInsideToken();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
-
     }
 
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
-        return new SecretKeySpec(keyBytes, 0, keyBytes.length,
-                JWT_ALGORITHM.getName());
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
     }
 
-    public Jwt checkValidRefreshToken(String token){
-     NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+    public Jwt checkValidRefreshToken(String token) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
-                try {
-                     return jwtDecoder.decode(token);
-                } catch (Exception e) {
-                    System.out.println(">>> Refresh Token error: " + e.getMessage());
-                    throw e;
-                }
+        try {
+            return jwtDecoder.decode(token);
+        } catch (Exception e) {
+            System.out.println(">>> Refresh Token error: " + e.getMessage());
+            throw e;
+        }
     }
-    
+
     /**
      * Get the login of the current user.
      *
