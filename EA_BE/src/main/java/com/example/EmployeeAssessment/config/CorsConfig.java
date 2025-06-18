@@ -1,6 +1,7 @@
 package com.example.EmployeeAssessment.config;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,14 +18,18 @@ public class CorsConfig {
 
         // cho phép các URL nào có thể kết nối tới backend
         configuration.setAllowedOrigins(
-                Arrays.asList("http://localhost:3000", "http://localhost:3000/**"));
+                Arrays.asList("http://localhost:3000"));
 
         // các method nào đc kết nối
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         // các phần header được phép gửi lên
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
+        // configuration.setAllowedHeaders(Arrays.asList("Authorization",
+        // "Content-Type", "Accept", "x-no-retry"));
 
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(List.of("*"));
         // gửi kèm cookies hay không
         configuration.setAllowCredentials(true);
 

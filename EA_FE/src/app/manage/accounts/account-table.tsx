@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect, useContext, createContext } from "react";
+import { useState, useContext, createContext, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -50,18 +49,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
-import TableSkeleton from "@/components/Skeleton";
-import { useDeleteUserMutation, useGetUserList } from "@/queries/useAccount";
+import {
+  useDeleteUserMutation,
+  useGetUserList,
+  useAccountProfile,
+} from "@/queries/useAccount";
 import { UserType } from "@/schemaValidations/account.schema";
 import { useAppContext } from "@/components/app-provider";
 import EditUser from "./edit-account";
+import CreateUser from "./add-user";
+import TableSkeleton from "@/components/Skeleton";
 
 const UserTableContext = createContext<{
-  userIdEdit: string | undefined;
-  setUserIdEdit: (value: string | undefined) => void;
+  userIdEdit: number | undefined;
+  setUserIdEdit: (value: number | undefined) => void;
   userDelete: UserType | null;
   setUserDelete: (value: UserType | null) => void;
 }>({
@@ -73,6 +76,61 @@ const UserTableContext = createContext<{
 
 const PAGE_SIZE = 10;
 
+function AlertDialogDeleteUser({
+  userDelete,
+  setUserDelete,
+  onSuccess,
+}: {
+  userDelete: UserType | null;
+  setUserDelete: (value: UserType | null) => void;
+  onSuccess?: () => void;
+}) {
+  const t = useTranslations("ManageUsers");
+  const { mutateAsync, isPending } = useDeleteUserMutation();
+
+  const deleteUser = async () => {
+    if (userDelete) {
+      try {
+        await mutateAsync(userDelete.userId);
+        setUserDelete(null);
+        toast({
+          description: t("DeleteSuccess"),
+        });
+        onSuccess?.();
+      } catch (error) {
+        handleErrorApi({ error });
+      }
+    }
+  };
+
+  return (
+    <AlertDialog
+      open={Boolean(userDelete)}
+      onOpenChange={(value) => {
+        if (!value) {
+          setUserDelete(null);
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("Delete")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("ConfirmDelete")}{" "}
+            <span className="font-bold">{userDelete?.userName}</span>?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={deleteUser} disabled={isPending}>
+            {isPending ? t("Submitting") : t("Delete")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export default function UserTable() {
   const t = useTranslations("ManageUsers");
   const paginationT = useTranslations("Pagination");
@@ -83,20 +141,34 @@ export default function UserTable() {
   const page = Number(searchParams.get("page")) || 1;
   const pageIndex = page - 1;
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [userIdEdit, setUserIdEdit] = useState<string | undefined>();
+  const [userIdEdit, setUserIdEdit] = useState<number | undefined>();
   const [userDelete, setUserDelete] = useState<UserType | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
+  // Fetch user permissions
+  const { data: accountData, isLoading: isAccountLoading } =
+    useAccountProfile();
+  const userPermissions = accountData?.payload?.data?.user?.role
+    ?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Fetch user list
   const userListQuery = useGetUserList(page, pageSize);
   const data = userListQuery.data?.payload.data.result ?? [];
-  console.log(">>>>>>>>>>>>>>data", userListQuery.data);
   const totalItems = userListQuery.data?.payload.data.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
   const columns: ColumnDef<UserType>[] = [
     {
-      accessorKey: "_id",
+      accessorKey: "userId",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -106,38 +178,20 @@ export default function UserTable() {
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("_id")}</div>,
+      cell: ({ row }) => <div>{row.getValue("userId")}</div>,
     },
     {
-      accessorKey: "avatar",
-      header: t("Avatar"),
-      cell: ({ row }) => {
-        const avatarUrl = row.getValue("avatar") as string;
-        return (
-          <Avatar className="aspect-square w-[50px] h-[50px] rounded-md object-cover">
-            <AvatarImage
-              src={avatarUrl || "/default-avatar.jpg"}
-              alt={row.getValue("name")}
-            />
-            <AvatarFallback>
-              {row.getValue("name")?.charAt(0) || "U"}
-            </AvatarFallback>
-          </Avatar>
-        );
-      },
-    },
-    {
-      accessorKey: "name",
+      accessorKey: "userName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("Name")}
+          {t("Username")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => <div>{row.getValue("userName")}</div>,
     },
     {
       accessorKey: "email",
@@ -153,47 +207,35 @@ export default function UserTable() {
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
     {
-      accessorKey: "phone",
+      accessorKey: "role",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("Phone")}
+          {t("Role")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("phone") || "-"}</div>,
-    },
-    {
-      accessorKey: "status",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {t("Status")}
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div>{row.getValue("status") ? t("Active") : t("Inactive")}</div>
-      ),
+      cell: ({ row }) => <div>{t(row.getValue("role"))}</div>,
     },
     {
       id: "actions",
       header: t("Actions"),
       cell: ({ row }) => (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
               <DotsHorizontalIcon className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setUserIdEdit(row.original._id)}>
+            <DropdownMenuItem
+              onClick={() => setUserIdEdit(row.original.userId)}
+            >
               {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setUserDelete(row.original)}>
@@ -219,9 +261,9 @@ export default function UserTable() {
     manualPagination: true,
   });
 
-  // useEffect(() => {
-  //   if (!isAuth) router.push("/login");
-  // }, [isAuth, router]);
+  useEffect(() => {
+    table.setPageIndex(pageIndex);
+  }, [table, pageIndex]);
 
   const goToPage = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -239,146 +281,140 @@ export default function UserTable() {
         <EditUser
           id={userIdEdit}
           setId={setUserIdEdit}
-          onSubmitSuccess={userListQuery.refetch}
+          onSubmitSuccess={() => {
+            setUserIdEdit(undefined);
+            userListQuery.refetch();
+          }}
         />
-        <AlertDialog
-          open={!!userDelete}
-          onOpenChange={(value) => !value && setUserDelete(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("Delete")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("ConfirmDelete")}{" "}
-                <span className="font-bold">{userDelete?.name}</span>?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (userDelete) {
-                    try {
-                      await useDeleteUserMutation().mutateAsync(userDelete._id);
-                      toast({ description: t("DeleteSuccess") });
-                      userListQuery.refetch();
-                    } catch (error) {
-                      handleErrorApi({ error });
-                    }
-                  }
-                }}
-              >
-                {t("Delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        <div className="flex items-center py-4 gap-5">
-          <Input
-            placeholder={t("FilterEmails")}
-            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("email")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <Input
-            placeholder={t("FilterNames")}
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
+        <AlertDialogDeleteUser
+          userDelete={userDelete}
+          setUserDelete={setUserDelete}
+          onSuccess={userListQuery.refetch}
+        />
+        {isAccountLoading || userListQuery.isLoading ? (
+          <TableSkeleton />
+        ) : userListQuery.isError ? (
+          <div className="text-red-500">
+            {t("Error")}: {userListQuery.error.message}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center py-4 gap-5">
+              <CreateUser onSubmitSuccess={userListQuery.refetch} />
+              <Input
+                placeholder={t("FilterEmails")}
+                value={
+                  (table.getColumn("email")?.getFilterValue() as string) ?? ""
+                }
+                onChange={(event) =>
+                  table.getColumn("email")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm w-[150px]"
+              />
+              <Input
+                placeholder={t("FilterUsernames")}
+                value={
+                  (table.getColumn("userName")?.getFilterValue() as string) ??
+                  ""
+                }
+                onChange={(event) =>
+                  table
+                    .getColumn("userName")
+                    ?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm w-[150px]"
+              />
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        {t("NoResults")}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {t("NoResults")}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between py-4">
-          <div className="text-xs text-muted-foreground">
-            {paginationT("Pagi1")}{" "}
-            <strong>{table.getRowModel().rows.length}</strong>{" "}
-            {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
-            {paginationT("Pagi3")}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(page - 1)}
-              disabled={page === 1}
-            >
-              {paginationT("Previous")}
-            </Button>
-            <span>
-              {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(page + 1)}
-              disabled={page === totalPages}
-            >
-              {paginationT("Next")}
-            </Button>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value));
-                goToPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder={paginationT("RowsPerPage")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <div className="text-xs text-muted-foreground">
+                {paginationT("Pagi1")}{" "}
+                <strong>{table.getRowModel().rows.length}</strong>{" "}
+                {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
+                {paginationT("Pagi3")}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  {paginationT("Previous")}
+                </Button>
+                <span>
+                  {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  {paginationT("Next")}
+                </Button>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    goToPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder={paginationT("RowsPerPage")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </UserTableContext.Provider>
   );

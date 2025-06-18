@@ -19,7 +19,7 @@ export default function Layout({
               <DarkModeToggle />
             </div>
           </div>
-          {/* <DropdownAvatar /> */}
+          <DropdownAvatar />
         </header>
         {children}
       </div>

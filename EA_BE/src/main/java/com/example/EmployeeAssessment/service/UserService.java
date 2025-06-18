@@ -34,7 +34,7 @@ public class UserService {
         }
         String hashPassword = this.passwordEncoder.encode(newUser.getPassword());
         newUser.setPassword(hashPassword);
-        newUser.setRole(null); // Set role to null if not provided
+        newUser.setRole(newUser.getRole()); // Set role to null if not provided
         User savedUser = userRepository.save(newUser);
         return savedUser;
     }

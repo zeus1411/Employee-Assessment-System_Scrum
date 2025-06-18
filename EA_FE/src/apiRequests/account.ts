@@ -1,4 +1,4 @@
-// src/apiRequests/user.ts
+//////////////////////////////////////////
 import http from "@/lib/http";
 import {
   UserListResType,
@@ -9,7 +9,6 @@ import {
 } from "@/schemaValidations/account.schema";
 
 const prefix = "/api/v1/users";
-const filePrefix = "/api/v1/files";
 
 export interface UserProfileResponse {
   status: number;
@@ -19,7 +18,7 @@ export interface UserProfileResponse {
       user: {
         id: string;
         email: string;
-        name: string;
+        userName: string;
         role: {
           roleId: string;
           roleName: string;
@@ -30,58 +29,19 @@ export interface UserProfileResponse {
   };
 }
 
-export interface FileUploadResponse {
-  payload: {
-    data: {
-      fileName: string;
-      uploadedAt: string;
-    };
-  };
-}
-
 const userApiRequest = {
   list: (page: number = 1, size: number = 10) =>
     http.get<UserListResType>(`${prefix}?current=${page}&pageSize=${size}`),
-  add: async (body: CreateUserBodyType, avatarFile?: File) => {
-    let avatarUrl: string | undefined;
-    if (avatarFile) {
-      const formData = new FormData();
-      formData.append("file", avatarFile);
-      formData.append("folder", "avatars");
-      const uploadResult = await http.post<FileUploadResponse>(
-        filePrefix,
-        formData
-      );
-      avatarUrl = `/upload/avatars/${uploadResult.payload.data.fileName}`;
-    }
+  add: (body: CreateUserBodyType) => {
     const { confirmPassword, ...requestBody } = body;
-    return http.post<UserResType>(prefix, {
-      ...requestBody,
-      avatar: avatarUrl || "default-avatar.jpg",
-    });
+    return http.post<UserResType>(prefix, requestBody);
   },
-  update: async (id: string, body: UpdateUserBodyType, avatarFile?: File) => {
-    let avatarUrl: string | undefined = body.avatar;
-    if (avatarFile) {
-      const formData = new FormData();
-      formData.append("file", avatarFile);
-      formData.append("folder", "avatars");
-      const uploadResult = await http.post<FileUploadResponse>(
-        filePrefix,
-        formData
-      );
-      avatarUrl = `/upload/avatars/${uploadResult.payload.data.fileName}`;
-    }
-    return http.put<UserResType>(prefix, {
-      _id: id,
-      ...body,
-      avatar: avatarUrl,
-    });
-  },
+  update: (id: number, body: UpdateUserBodyType) =>
+    http.put<UserResType>(`${prefix}/${id}`, body),
   updatePassword: (body: UpdatePasswordBodyType) =>
     http.post<UserResType>(`${prefix}/password`, body),
-  get: (id: string) => http.get<UserResType>(`${prefix}/${id}`),
-  delete: (id: string) => http.delete<UserResType>(`${prefix}/${id}`),
+  get: (id: number) => http.get<UserResType>(`${prefix}/${id}`),
+  delete: (id: number) => http.delete<UserResType>(`${prefix}/${id}`),
   me: () => http.get<UserProfileResponse>("/api/v1/auth/account"),
 };
 
