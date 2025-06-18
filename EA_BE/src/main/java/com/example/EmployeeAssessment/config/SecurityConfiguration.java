@@ -56,10 +56,12 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whiteList = {
                 "/",
                 "/api/v1/auth/login",
+                "/api/v1/users/**",
                 "/resources/**",
                 "/css/**",
                 "/js/**"
@@ -116,7 +118,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public CommandLineRunner initAdminUser(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public CommandLineRunner initAdminUser(UserRepository userRepository, RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder) {
         return args -> {
             // Check if ADMIN role exists, create if not
             Role adminRole = roleRepository.findByRoleName("ADMIN")
