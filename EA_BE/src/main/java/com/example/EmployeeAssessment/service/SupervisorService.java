@@ -36,50 +36,40 @@ public class SupervisorService {
     public ResponseEntity<ResultPaginationDTO> getListTeam(Specification<Team> spec, Pageable pageable) {
         logger.info("Fetching team list for page: {}, pageSize: {}", pageable.getPageNumber(), pageable.getPageSize());
 
-        // Lấy email người dùng từ token
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
         if (email.isEmpty()) {
             throw new RuntimeException("Bạn chưa đăng nhập!");
         }
 
-        // Lấy User từ email
         User currentUser = userService.handleGetUserByUsername(email);
         if (currentUser == null) {
             throw new RuntimeException("Không tìm thấy người dùng với email: " + email);
         }
 
-        // Kiểm tra role_id của người dùng
         Role userRole = currentUser.getRole();
         if (userRole == null || (userRole.getRoleId() != 1 && userRole.getRoleId() != 2)) {
             throw new RuntimeException("Bạn không có quyền xem danh sách team!");
         }
 
         Specification<Team> finalSpec;
-
-        // Nếu là SUPERVISOR (role_id = 2), chỉ lấy các team mà họ quản lý
         if (userRole.getRoleId() == 2) {
             Specification<Team> supervisorSpec = (root, query, cb) ->
                     cb.equal(root.get("supervisor"), currentUser);
             finalSpec = (spec == null) ? supervisorSpec : spec.and(supervisorSpec);
         } else {
-            // Nếu là ADMIN (role_id = 1), không áp dụng filter supervisor
             finalSpec = spec;
         }
 
-        // Query phân trang
         Page<Team> page = teamRepository.findAll(finalSpec, pageable);
 
-        // Build response
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
-
         mt.setPage(pageable.getPageNumber() + 1);
         mt.setPageSize(pageable.getPageSize());
         mt.setPages(page.getTotalPages());
         mt.setTotal(page.getTotalElements());
-
         rs.setMeta(mt);
-        // Map từ Team → TeamResponseDTO
+
         List<TeamResponeDTO> teamDTOList = page.getContent().stream()
                 .map(team -> {
                     TeamResponeDTO dto = new TeamResponeDTO();
@@ -88,7 +78,6 @@ public class SupervisorService {
                     return dto;
                 })
                 .toList();
-
         rs.setResult(teamDTOList);
 
         return ResponseEntity.ok().body(rs);
@@ -97,13 +86,11 @@ public class SupervisorService {
     public ResponseEntity<ResultPaginationDTO> getTeamMembers(Long tid, Specification<User> spec, Pageable pageable) {
         logger.info("Fetching members for teamId: {}, page: {}, pageSize: {}", tid, pageable.getPageNumber(), pageable.getPageSize());
 
-        // Lấy team theo ID
         Optional<Team> teamOptional = teamRepository.findById(tid);
         if (teamOptional.isEmpty()) {
             throw new RuntimeException("Không tìm thấy team với ID: " + tid);
         }
 
-        // Kiểm tra quyền truy cập team
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
         if (email.isEmpty()) {
             throw new RuntimeException("Bạn chưa đăng nhập!");
@@ -119,32 +106,24 @@ public class SupervisorService {
             throw new RuntimeException("Bạn không có quyền xem thành viên của team này!");
         }
 
-        // Nếu là SUPERVISOR, kiểm tra xem họ có quản lý team này không
         if (userRole.getRoleId() == 2 && teamOptional.get().getSupervisor().getUserId() != currentUser.getUserId()) {
             throw new RuntimeException("Bạn không có quyền xem thành viên của team này!");
         }
 
-        // Tạo Specification để lọc theo team_id
         Specification<User> teamSpec = (root, query, cb) ->
                 cb.equal(root.join("teams").get("teamId"), tid);
-
-        // Combine spec (nếu có filter thêm)
         Specification<User> finalSpec = (spec == null) ? teamSpec : spec.and(teamSpec);
 
-        // Query phân trang
         Page<User> page = userRepository.findAll(finalSpec, pageable);
 
-        // Build response
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
-
         mt.setPage(pageable.getPageNumber() + 1);
         mt.setPageSize(pageable.getPageSize());
         mt.setPages(page.getTotalPages());
         mt.setTotal(page.getTotalElements());
-
         rs.setMeta(mt);
-        // Map từ User → EmployeeResponeDTO
+
         List<EmployeeResponeDTO> memberDTOList = page.getContent().stream()
                 .map(user -> {
                     EmployeeResponeDTO dto = new EmployeeResponeDTO();
@@ -153,7 +132,6 @@ public class SupervisorService {
                     return dto;
                 })
                 .toList();
-
         rs.setResult(memberDTOList);
 
         return ResponseEntity.ok().body(rs);
@@ -163,34 +141,28 @@ public class SupervisorService {
     public TeamResponeDTO createNewTeam(TeamRequestDTO teamRequest) {
         logger.info("Starting createNewTeam with teamName: {}", teamRequest.getTeamName());
 
-        // Lấy email người dùng từ token
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
         if (email.isEmpty()) {
             throw new RuntimeException("Bạn chưa đăng nhập!");
         }
 
-        // Lấy User từ email
         User currentUser = userService.handleGetUserByUsername(email);
         if (currentUser == null) {
             throw new RuntimeException("Không tìm thấy người dùng với email: " + email);
         }
 
-        // Kiểm tra role_id của người dùng
         Role userRole = currentUser.getRole();
         if (userRole == null || (userRole.getRoleId() != 1 && userRole.getRoleId() != 2)) {
             throw new RuntimeException("Bạn không có quyền tạo team!");
         }
 
-        // Validate teamName
         if (teamRequest.getTeamName() == null || teamRequest.getTeamName().trim().isEmpty()) {
             throw new RuntimeException("Tên team không được để trống!");
         }
 
-        // Tạo Team entity
         Team newTeam = new Team();
         newTeam.setTeamName(teamRequest.getTeamName());
 
-        // Validate and set supervisor
         if (teamRequest.getSupervisorId() != null && teamRequest.getSupervisorId() > 0) {
             User supervisor = userRepository.findById(teamRequest.getSupervisorId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
@@ -205,7 +177,6 @@ public class SupervisorService {
             logger.info("No supervisor provided, setting current user as supervisor with userId: {}", currentUser.getUserId());
         }
 
-        // Validate and set members
         if (teamRequest.getMemberIds() != null && !teamRequest.getMemberIds().isEmpty()) {
             List<User> members = teamRequest.getMemberIds().stream()
                     .map(userId -> {
@@ -221,21 +192,147 @@ public class SupervisorService {
             logger.info("No members provided for the team");
         }
 
-        // Lưu team mới
         Team savedTeam = teamRepository.save(newTeam);
         logger.info("Team saved with teamId: {}", savedTeam.getTeamId());
 
-        // Verify members in team_user table
         if (teamRequest.getMemberIds() != null && !teamRequest.getMemberIds().isEmpty()) {
             List<User> savedMembers = savedTeam.getMembers();
             logger.info("Saved team has {} members", savedMembers != null ? savedMembers.size() : 0);
         }
 
-        // Map từ Team → TeamResponseDTO
         TeamResponeDTO teamDTO = new TeamResponeDTO();
         teamDTO.setTeamId(savedTeam.getTeamId());
         teamDTO.setTeamName(savedTeam.getTeamName());
-
         return teamDTO;
+    }
+
+    @Transactional
+    public TeamResponeDTO updateTeam(Long teamId, TeamRequestDTO teamRequest) {
+        logger.info("Starting updateTeam with teamId: {}", teamId);
+
+        // Lấy team theo ID
+        Team existingTeam = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy team với ID: " + teamId));
+
+        // Lấy email người dùng từ token
+        String email = SecurityUtil.getCurrentUserLogin().orElse("");
+        if (email.isEmpty()) {
+            throw new RuntimeException("Bạn chưa đăng nhập!");
+        }
+
+        // Lấy User từ email
+        User currentUser = userService.handleGetUserByUsername(email);
+        if (currentUser == null) {
+            throw new RuntimeException("Không tìm thấy người dùng với email: " + email);
+        }
+
+        // Kiểm tra quyền truy cập
+        Role userRole = currentUser.getRole();
+        if (userRole == null || (userRole.getRoleId() != 1 && userRole.getRoleId() != 2)) {
+            throw new RuntimeException("Bạn không có quyền cập nhật team này!");
+        }
+
+        // Nếu là SUPERVISOR, kiểm tra xem họ có quản lý team này không
+        if (userRole.getRoleId() == 2 && existingTeam.getSupervisor().getUserId() != currentUser.getUserId()) {
+            throw new RuntimeException("Bạn không có quyền cập nhật team này!");
+        }
+
+        // Cập nhật tên team
+        if (teamRequest.getTeamName() != null && !teamRequest.getTeamName().trim().isEmpty()) {
+            existingTeam.setTeamName(teamRequest.getTeamName());
+            logger.info("Updated team name to: {}", teamRequest.getTeamName());
+        } else {
+            throw new RuntimeException("Tên team không được để trống!");
+        }
+
+        // Cập nhật supervisor nếu có
+        if (teamRequest.getSupervisorId() != null && teamRequest.getSupervisorId() > 0) {
+            User supervisor = userRepository.findById(teamRequest.getSupervisorId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
+            Role supervisorRole = supervisor.getRole();
+            if (supervisorRole == null || (supervisorRole.getRoleId() != 1 && supervisorRole.getRoleId() != 2)) {
+                throw new RuntimeException("Người dùng với ID " + teamRequest.getSupervisorId() + " không có quyền làm supervisor!");
+            }
+            existingTeam.setSupervisor(supervisor);
+            logger.info("Updated supervisor to userId: {}", teamRequest.getSupervisorId());
+        } else {
+            // Không thay đổi supervisor nếu không cung cấp
+            logger.info("No supervisorId provided, keeping existing supervisor with userId: {}", existingTeam.getSupervisor().getUserId());
+        }
+
+        // Cập nhật members nếu có
+        if (teamRequest.getMemberIds() != null) {
+            // Xóa tất cả members hiện tại trong team_user
+            existingTeam.getMembers().clear();
+            logger.info("Cleared existing members for teamId: {}", teamId);
+
+            // Thêm members mới
+            if (!teamRequest.getMemberIds().isEmpty()) {
+                List<User> members = teamRequest.getMemberIds().stream()
+                        .map(userId -> {
+                            User user = userRepository.findById(userId)
+                                    .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + userId));
+                            logger.info("Found member with userId: {}", userId);
+                            return user;
+                        })
+                        .collect(Collectors.toList());
+                existingTeam.setMembers(members);
+                logger.info("Updated members with count: {}", members.size());
+            } else {
+                logger.info("No members provided, team will have no members");
+            }
+        } else {
+            logger.info("No memberIds provided, keeping existing members");
+        }
+
+        // Lưu team đã cập nhật
+        Team updatedTeam = teamRepository.save(existingTeam);
+        logger.info("Team updated with teamId: {}", updatedTeam.getTeamId());
+
+        // Verify members
+        List<User> savedMembers = updatedTeam.getMembers();
+        logger.info("Updated team has {} members", savedMembers != null ? savedMembers.size() : 0);
+
+        // Map từ Team → TeamResponseDTO
+        TeamResponeDTO teamDTO = new TeamResponeDTO();
+        teamDTO.setTeamId(updatedTeam.getTeamId());
+        teamDTO.setTeamName(updatedTeam.getTeamName());
+        return teamDTO;
+    }
+
+    @Transactional
+    public void deleteTeam(Long teamId) {
+        logger.info("Starting deleteTeam with teamId: {}", teamId);
+
+        // Lấy team theo ID
+        Team existingTeam = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy team với ID: " + teamId));
+
+        // Lấy email người dùng từ token
+        String email = SecurityUtil.getCurrentUserLogin().orElse("");
+        if (email.isEmpty()) {
+            throw new RuntimeException("Bạn chưa đăng nhập!");
+        }
+
+        // Lấy User từ email
+        User currentUser = userService.handleGetUserByUsername(email);
+        if (currentUser == null) {
+            throw new RuntimeException("Không tìm thấy người dùng với email: " + email);
+        }
+
+        // Kiểm tra quyền truy cập
+        Role userRole = currentUser.getRole();
+        if (userRole == null || (userRole.getRoleId() != 1 && userRole.getRoleId() != 2)) {
+            throw new RuntimeException("Bạn không có quyền xóa team này!");
+        }
+
+        // Nếu là SUPERVISOR, kiểm tra xem họ có quản lý team này không
+        if (userRole.getRoleId() == 2 && existingTeam.getSupervisor().getUserId() != currentUser.getUserId()) {
+            throw new RuntimeException("Bạn không có quyền xóa team này!");
+        }
+
+        // Xóa team (cascade sẽ xóa các bản ghi liên quan trong team_user)
+        teamRepository.delete(existingTeam);
+        logger.info("Team deleted with teamId: {}", teamId);
     }
 }

@@ -14,12 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -44,8 +39,27 @@ public class SupervisorController {
 
     @GetMapping("/members/{tid}")
     public ResponseEntity<ResultPaginationDTO> getTeamMembers(@PathVariable("tid") Long teamId,
-                                                             @Filter Specification<User> spec,
-                                                             Pageable pageable) {
+            @Filter Specification<User> spec,
+            Pageable pageable) {
         return supervisorService.getTeamMembers(teamId, spec, pageable);
+    }
+
+    @PutMapping("/teams/{tid}")
+    public ResponseEntity<RestResponse<TeamResponeDTO>> updateTeam(@PathVariable("tid") Long teamId,
+            @Valid @RequestBody TeamRequestDTO teamRequest) {
+        TeamResponeDTO updatedTeam = supervisorService.updateTeam(teamId, teamRequest);
+        RestResponse<TeamResponeDTO> response = new RestResponse<>();
+        response.setStatusCode(HttpStatus.OK.value());
+        response.setData(updatedTeam);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/teams/{tid}")
+    public ResponseEntity<RestResponse<String>> deleteTeam(@PathVariable("tid") Long teamId) {
+        supervisorService.deleteTeam(teamId);
+        RestResponse<String> response = new RestResponse<>();
+        response.setStatusCode(HttpStatus.OK.value());
+        response.setData("Team deleted successfully");
+        return ResponseEntity.ok(response);
     }
 }
