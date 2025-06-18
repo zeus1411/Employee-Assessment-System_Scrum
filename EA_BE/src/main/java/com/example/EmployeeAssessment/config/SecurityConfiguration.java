@@ -64,6 +64,7 @@ public class SecurityConfiguration {
         String[] whiteList = {
                 "/",
                 "/api/v1/auth/login",
+                "/api/v1/users/**",
                 "/resources/**",
                 "/css/**",
                 "/js/**"

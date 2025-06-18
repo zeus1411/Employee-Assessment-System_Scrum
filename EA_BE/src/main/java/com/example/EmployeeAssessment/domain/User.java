@@ -1,9 +1,11 @@
 package com.example.EmployeeAssessment.domain;
 
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+<<<<<<< HEAD
 import jakarta.persistence.Column;
+=======
+>>>>>>> eab59e0f882256de36d08a6814f560e9fde1f609
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
