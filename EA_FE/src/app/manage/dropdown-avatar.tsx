@@ -24,9 +24,9 @@ export default function DropdownAvatar() {
   const logoutMutation = useLogoutMutation();
   const { data, isLoading, isError, error } = useAccountProfile();
   const { setIsAuth, setRole, setPermissions } = useAppContext();
-  console.log(">>>>", data);
-  const account = data?.data?.user;
-
+  console.log(">>>><<<<< data user", data);
+  const account = data?.payload?.data.user;
+  console.log(">>>><<<<< account", account);
   const logout = async () => {
     if (logoutMutation.isPending) {
       console.log("Logout mutation is pending, skipping");
@@ -102,7 +102,7 @@ export default function DropdownAvatar() {
         <Button
           variant="outline"
           size="icon"
-          className="overflow-hidden rounded-full"
+          className="overflow-hidden rounded-full "
         >
           <Avatar>
             <AvatarImage
@@ -115,15 +115,21 @@ export default function DropdownAvatar() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-white z-[999]">
         <DropdownMenuLabel>
           <div className="flex flex-col">
-            <span>{account?.name || t("UnknownUser")}</span>
+            <span>
+              {" "}
+              <span className="text-blue-500">Name :</span>{" "}
+              {account?.name || t("UnknownUser")}
+            </span>
             <span className="text-sm text-muted-foreground">
+              <span className="text-blue-500">Email</span>{" "}
               {account?.email || t("UnknownUser")}
             </span>
             <span className="text-sm text-muted-foreground">
-              {account?.role?.name || t("NoRole")}
+              <span className="text-blue-500"> Role :</span>{" "}
+              {account?.role?.roleName || t("NoRole")}
             </span>
           </div>
         </DropdownMenuLabel>
@@ -131,11 +137,6 @@ export default function DropdownAvatar() {
         <DropdownMenuItem asChild>
           <Link href="/manage/setting" className="cursor-pointer">
             {t("Settings")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/booking-history" className="cursor-pointer">
-            {t("Support")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

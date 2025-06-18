@@ -16,16 +16,16 @@ export interface UserProfileResponse {
   message: string;
   payload: {
     data: {
-      _id: string;
-      email: string;
-      name: string;
-      phone: string;
-      avatar: string;
-      role: string;
-      permissions: Array<{
-        module: string;
-        method: string;
-      }>;
+      user: {
+        id: string;
+        email: string;
+        name: string;
+        role: {
+          roleId: string;
+          roleName: string;
+          description: string;
+        };
+      };
     };
   };
 }
@@ -82,7 +82,7 @@ const userApiRequest = {
     http.post<UserResType>(`${prefix}/password`, body),
   get: (id: string) => http.get<UserResType>(`${prefix}/${id}`),
   delete: (id: string) => http.delete<UserResType>(`${prefix}/${id}`),
-  me: () => http.get<UserProfileResponse>("/api/v1/auth/profile"),
+  me: () => http.get<UserProfileResponse>("/api/v1/auth/account"),
 };
 
 export default userApiRequest;
