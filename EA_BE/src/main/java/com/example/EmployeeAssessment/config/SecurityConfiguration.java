@@ -54,6 +54,7 @@ public class SecurityConfiguration {
             "/api/v1/auth/login",
             "/api/v1/users/**",
             "/api/v1/assessments/**",
+            "/api/v1/supervisor/assessments/**",
             "/api/v1/auth/refresh",
             "/resources/**",
             "/css/**",

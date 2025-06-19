@@ -106,7 +106,8 @@ public class UserService {
     }
 
     public User handleGetUserByUsername(String username) {
-        return this.userRepository.findByEmail(username);
+        return this.userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
     }
 
     public void updateUserToken(String token, String email) {

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,4 +40,7 @@ public class Assessment {
             inverseJoinColumns = @JoinColumn(name = "assessment_criteria_id") // Cột liên kết với AssessmentCriteria
     )
     private List<AssessmentCriteria> assessmentCriteria;
+
+    @Column(name = "created_by")
+    private Long createdBy;
 }
