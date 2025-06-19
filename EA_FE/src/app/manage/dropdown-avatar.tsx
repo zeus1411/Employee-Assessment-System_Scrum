@@ -115,7 +115,7 @@ export default function DropdownAvatar() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-white z-[999]">
+      <DropdownMenuContent align="end" className="bg-black z-[999]">
         <DropdownMenuLabel>
           <div className="flex flex-col">
             <span>

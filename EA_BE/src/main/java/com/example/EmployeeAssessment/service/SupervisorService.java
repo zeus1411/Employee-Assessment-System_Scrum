@@ -53,8 +53,7 @@ public class SupervisorService {
 
         Specification<Team> finalSpec;
         if (userRole.getRoleId() == 2) {
-            Specification<Team> supervisorSpec = (root, query, cb) ->
-                    cb.equal(root.get("supervisor"), currentUser);
+            Specification<Team> supervisorSpec = (root, query, cb) -> cb.equal(root.get("supervisor"), currentUser);
             finalSpec = (spec == null) ? supervisorSpec : spec.and(supervisorSpec);
         } else {
             finalSpec = spec;
@@ -84,7 +83,8 @@ public class SupervisorService {
     }
 
     public ResponseEntity<ResultPaginationDTO> getTeamMembers(Long tid, Specification<User> spec, Pageable pageable) {
-        logger.info("Fetching members for teamId: {}, page: {}, pageSize: {}", tid, pageable.getPageNumber(), pageable.getPageSize());
+        logger.info("Fetching members for teamId: {}, page: {}, pageSize: {}", tid, pageable.getPageNumber(),
+                pageable.getPageSize());
 
         Optional<Team> teamOptional = teamRepository.findById(tid);
         if (teamOptional.isEmpty()) {
@@ -110,8 +110,7 @@ public class SupervisorService {
             throw new RuntimeException("Bạn không có quyền xem thành viên của team này!");
         }
 
-        Specification<User> teamSpec = (root, query, cb) ->
-                cb.equal(root.join("teams").get("teamId"), tid);
+        Specification<User> teamSpec = (root, query, cb) -> cb.equal(root.join("teams").get("teamId"), tid);
         Specification<User> finalSpec = (spec == null) ? teamSpec : spec.and(teamSpec);
 
         Page<User> page = userRepository.findAll(finalSpec, pageable);
@@ -165,16 +164,19 @@ public class SupervisorService {
 
         if (teamRequest.getSupervisorId() != null && teamRequest.getSupervisorId() > 0) {
             User supervisor = userRepository.findById(teamRequest.getSupervisorId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
             Role supervisorRole = supervisor.getRole();
             if (supervisorRole == null || (supervisorRole.getRoleId() != 1 && supervisorRole.getRoleId() != 2)) {
-                throw new RuntimeException("Người dùng với ID " + teamRequest.getSupervisorId() + " không có quyền làm supervisor!");
+                throw new RuntimeException(
+                        "Người dùng với ID " + teamRequest.getSupervisorId() + " không có quyền làm supervisor!");
             }
             newTeam.setSupervisor(supervisor);
             logger.info("Supervisor set with userId: {}", teamRequest.getSupervisorId());
         } else {
             newTeam.setSupervisor(currentUser);
-            logger.info("No supervisor provided, setting current user as supervisor with userId: {}", currentUser.getUserId());
+            logger.info("No supervisor provided, setting current user as supervisor with userId: {}",
+                    currentUser.getUserId());
         }
 
         if (teamRequest.getMemberIds() != null && !teamRequest.getMemberIds().isEmpty()) {
@@ -248,16 +250,19 @@ public class SupervisorService {
         // Cập nhật supervisor nếu có
         if (teamRequest.getSupervisorId() != null && teamRequest.getSupervisorId() > 0) {
             User supervisor = userRepository.findById(teamRequest.getSupervisorId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy supervisor với ID: " + teamRequest.getSupervisorId()));
             Role supervisorRole = supervisor.getRole();
             if (supervisorRole == null || (supervisorRole.getRoleId() != 1 && supervisorRole.getRoleId() != 2)) {
-                throw new RuntimeException("Người dùng với ID " + teamRequest.getSupervisorId() + " không có quyền làm supervisor!");
+                throw new RuntimeException(
+                        "Người dùng với ID " + teamRequest.getSupervisorId() + " không có quyền làm supervisor!");
             }
             existingTeam.setSupervisor(supervisor);
             logger.info("Updated supervisor to userId: {}", teamRequest.getSupervisorId());
         } else {
             // Không thay đổi supervisor nếu không cung cấp
-            logger.info("No supervisorId provided, keeping existing supervisor with userId: {}", existingTeam.getSupervisor().getUserId());
+            logger.info("No supervisorId provided, keeping existing supervisor with userId: {}",
+                    existingTeam.getSupervisor().getUserId());
         }
 
         // Cập nhật members nếu có
@@ -334,5 +339,12 @@ public class SupervisorService {
         // Xóa team (cascade sẽ xóa các bản ghi liên quan trong team_user)
         teamRepository.delete(existingTeam);
         logger.info("Team deleted with teamId: {}", teamId);
+    }
+
+    public Team getTeamById(Long teamId) {
+        logger.info("Fetching team by ID: {}", teamId);
+        Team team = teamRepository.findById(teamId).get();
+        return team;
+
     }
 }

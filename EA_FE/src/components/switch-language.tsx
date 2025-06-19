@@ -28,7 +28,7 @@ export function SwitchLanguage() {
         <SelectValue placeholder={t("title")} />
       </SelectTrigger>
 
-      <SelectContent className="bg-white z-[999]">
+      <SelectContent className="bg-black z-[999]">
         <SelectGroup>
           {locales.map((locale) => (
             <SelectItem value={locale} key={locale}>

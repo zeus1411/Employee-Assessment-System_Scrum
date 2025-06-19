@@ -62,4 +62,12 @@ public class SupervisorController {
         response.setData("Team deleted successfully");
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/teams/{tid}")
+    public ResponseEntity<Team> getTeamById(@PathVariable("tid") Long teamId) {
+        Team team = this.supervisorService.getTeamById(teamId);
+        return ResponseEntity.ok().body(team);
+
+    }
+
 }
