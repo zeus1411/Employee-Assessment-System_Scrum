@@ -24,42 +24,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import {
-  UpdateAssessmentBodyType,
-  UpdateAssessmentBody,
-} from "@/schemaValidations/assessment.schema";
-import {
-  useGetAssessment,
-  useUpdateAssessmentMutation,
-} from "@/queries/useAssessment";
-import { da } from "date-fns/locale";
+  CreateTeamBody,
+  UpdateTeamBodyType,
+} from "@/schemaValidations/team.schema";
+import { useGetTeam, useUpdateTeamMutation } from "@/queries/useTeam";
 
-type EditAssessmentProps = {
+type EditTeamProps = {
   id: number | undefined;
   setId: (value: number | undefined) => void;
   onSubmitSuccess?: () => void;
 };
 
-export default function EditAssessment({
+export default function EditTeam({
   id,
   setId,
   onSubmitSuccess,
-}: EditAssessmentProps) {
-  const t = useTranslations("ManageAssessments");
-  const { data, isLoading } = useGetAssessment({ id: id || 0, enabled: !!id });
-  const updateAssessmentMutation = useUpdateAssessmentMutation();
+}: EditTeamProps) {
+  const t = useTranslations("ManageTeams");
+  const { data, isLoading } = useGetTeam({ id: id || 0, enabled: !!id });
+  const updateTeamMutation = useUpdateTeamMutation();
 
-  const form = useForm<UpdateAssessmentBodyType>({
-    resolver: zodResolver(UpdateAssessmentBody),
+  const form = useForm<UpdateTeamBodyType>({
+    resolver: zodResolver(CreateTeamBody),
     defaultValues: {
-      criteriaName: "",
-      description: "",
+      teamName: "",
+      supervisorId: "",
+      memberIds: [],
     },
   });
 
   useEffect(() => {
     if (data) {
-      const { criteriaName, description } = data.payload.data;
-      form.reset({ criteriaName, description });
+      const { teamName, supervisorId, memberIds } = data.payload.data;
+      form.reset({ teamName, supervisorId, memberIds });
     }
   }, [data, form]);
 
@@ -68,19 +65,18 @@ export default function EditAssessment({
     setId(undefined);
   };
 
-  const onSubmit = async (values: UpdateAssessmentBodyType) => {
-    if (updateAssessmentMutation.isPending || !id) return;
+  const onSubmit = async (values: UpdateTeamBodyType) => {
+    if (updateTeamMutation.isPending || !id) return;
     try {
-      await updateAssessmentMutation.mutateAsync({ id, body: values });
+      await updateTeamMutation.mutateAsync({ id, body: values });
       toast({
-        description: t("UpdateSuccess", { criteriaName: values.criteriaName }),
+        description: t("UpdateSuccess", { teamName: values.teamName }),
       });
       reset();
       onSubmitSuccess?.();
     } catch (error) {
       handleErrorApi({ error, setError: form.setError });
       toast({ description: t("UpdateError"), variant: "destructive" });
-      console.error("Form submission error:", error);
     }
   };
 
@@ -91,12 +87,9 @@ export default function EditAssessment({
         if (!value) reset();
       }}
     >
-      <DialogContent
-        className="sm:max-w-[600px] max-h-screen overflow-auto"
-        onCloseAutoFocus={reset}
-      >
+      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-auto">
         <DialogHeader>
-          <DialogTitle>{t("UpdateAssessment")}</DialogTitle>
+          <DialogTitle>{t("UpdateTeam")}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <div className="flex items-center justify-center p-4">
@@ -106,21 +99,19 @@ export default function EditAssessment({
         ) : (
           <Form {...form}>
             <form
-              id="edit-assessment-form"
-              onSubmit={form.handleSubmit(onSubmit, (errors) => {
-                console.log("Form errors:", errors);
-              })}
+              id="edit-team-form"
+              onSubmit={form.handleSubmit(onSubmit)}
               className="grid gap-4 py-4"
             >
               <FormField
                 control={form.control}
-                name="criteriaName"
+                name="teamName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("CriteriaName")}</FormLabel>
+                    <FormLabel>{t("TeamName")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("CriteriaNamePlaceholder")}
+                        placeholder={t("TeamNamePlaceholder")}
                         {...field}
                       />
                     </FormControl>
@@ -130,14 +121,33 @@ export default function EditAssessment({
               />
               <FormField
                 control={form.control}
-                name="description"
+                name="supervisorId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("Description")}</FormLabel>
+                    <FormLabel>{t("SupervisorID")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("DescriptionPlaceholder")}
+                        placeholder={t("SupervisorIDPlaceholder")}
                         {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="memberIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("Members")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t("MemberIdsPlaceholder")}
+                        value={field.value.join(", ")}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.split(",").map(Number))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -150,10 +160,10 @@ export default function EditAssessment({
         <DialogFooter>
           <Button
             type="submit"
-            form="edit-assessment-form"
-            disabled={updateAssessmentMutation.isPending || isLoading}
+            form="edit-team-form"
+            disabled={updateTeamMutation.isPending || isLoading}
           >
-            {updateAssessmentMutation.isPending ? (
+            {updateTeamMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("Submitting")}

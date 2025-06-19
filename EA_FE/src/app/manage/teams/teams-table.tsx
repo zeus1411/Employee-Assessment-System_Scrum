@@ -51,51 +51,43 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
-import {
-  useDeleteAssessmentMutation,
-  useAssessmentList,
-} from "@/queries/useAssessment";
-import { useAccountProfile } from "@/queries/useAccount";
-import { AssessmentCriteriaType } from "@/schemaValidations/assessment.schema";
+import { useDeleteTeamMutation, useTeamList } from "@/queries/useTeam";
 import TableSkeleton from "@/components/Skeleton";
-import EditAssessment from "./edit-assessment-form";
-import CreateAssessment from "./create-assessment-form";
+import EditTeam from "./edit-team-form";
+import CreateTeam from "./create-team-form";
+import { TeamType } from "@/schemaValidations/team.schema";
 
-const AssessmentTableContext = createContext<{
-  assessmentIdEdit: number | undefined;
-  setAssessmentIdEdit: (value: number | undefined) => void;
-  assessmentDelete: AssessmentCriteriaType | null;
-  setAssessmentDelete: (value: AssessmentCriteriaType | null) => void;
+const TeamTableContext = createContext<{
+  teamIdEdit: number | undefined;
+  setTeamIdEdit: (value: number | undefined) => void;
+  teamDelete: TeamType | null;
+  setTeamDelete: (value: TeamType | null) => void;
 }>({
-  assessmentIdEdit: undefined,
-  setAssessmentIdEdit: () => {},
-  assessmentDelete: null,
-  setAssessmentDelete: () => {},
+  teamIdEdit: undefined,
+  setTeamIdEdit: () => {},
+  teamDelete: null,
+  setTeamDelete: () => {},
 });
 
 const PAGE_SIZE = 20;
 
-function AlertDialogDeleteAssessment({
-  assessmentDelete,
-  setAssessmentDelete,
+function AlertDialogDeleteTeam({
+  teamDelete,
+  setTeamDelete,
   onSuccess,
 }: {
-  assessmentDelete: AssessmentCriteriaType | null;
-  setAssessmentDelete: (value: AssessmentCriteriaType | null) => void;
+  teamDelete: TeamType | null;
+  setTeamDelete: (value: TeamType | null) => void;
   onSuccess?: () => void;
 }) {
-  const t = useTranslations("ManageAssessments");
-  const { mutateAsync, isPending } = useDeleteAssessmentMutation();
+  const t = useTranslations("ManageTeams");
+  const { mutateAsync, isPending } = useDeleteTeamMutation();
 
-  const deleteAssessment = async () => {
-    if (assessmentDelete) {
+  const deleteTeam = async () => {
+    if (teamDelete) {
       try {
-        console.log("ladasda sda sd asd asd sasdd asd asd asd ");
-
-        await mutateAsync(assessmentDelete.assessmentCriteriaId);
-        console.log("asdasdasdasdsa", assessmentDelete);
-        console.log("assessDelete", assessmentDelete.assessmentCriteriaId);
-        setAssessmentDelete(null);
+        await mutateAsync(teamDelete.teamId);
+        setTeamDelete(null);
         toast({ description: t("DeleteSuccess") });
         onSuccess?.();
       } catch (error) {
@@ -106,9 +98,9 @@ function AlertDialogDeleteAssessment({
 
   return (
     <AlertDialog
-      open={Boolean(assessmentDelete)}
+      open={Boolean(teamDelete)}
       onOpenChange={(value) => {
-        if (!value) setAssessmentDelete(null);
+        if (!value) setTeamDelete(null);
       }}
     >
       <AlertDialogContent>
@@ -116,12 +108,12 @@ function AlertDialogDeleteAssessment({
           <AlertDialogTitle>{t("Delete")}</AlertDialogTitle>
           <AlertDialogDescription>
             {t("ConfirmDelete")}{" "}
-            <span className="font-bold">{assessmentDelete?.criteriaName}</span>?
+            <span className="font-bold">{teamDelete?.teamName}</span>?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteAssessment} disabled={isPending}>
+          <AlertDialogAction onClick={deleteTeam} disabled={isPending}>
             {isPending ? t("Submitting") : t("Delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -130,8 +122,8 @@ function AlertDialogDeleteAssessment({
   );
 }
 
-export default function AssessmentTable() {
-  const t = useTranslations("ManageAssessments");
+export default function TeamTable() {
+  const t = useTranslations("ManageTeams");
   const paginationT = useTranslations("Pagination");
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -139,22 +131,20 @@ export default function AssessmentTable() {
   const page = Number(searchParams.get("page")) || 1;
   const pageIndex = page - 1;
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [assessmentIdEdit, setAssessmentIdEdit] = useState<
-    number | undefined
-  >();
-  const [assessmentDelete, setAssessmentDelete] =
-    useState<AssessmentCriteriaType | null>(null);
+  const [teamIdEdit, setTeamIdEdit] = useState<number | undefined>();
+  const [teamDelete, setTeamDelete] = useState<TeamType | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const assessmentListQuery = useAssessmentList(page, pageSize);
-  const data = assessmentListQuery.data?.payload.data.result ?? [];
-  const totalItems = assessmentListQuery.data?.payload.data.meta.total ?? 0;
+  const teamListQuery = useTeamList(page, pageSize);
+  console.log("asdasdasdasd afsf asf asf ", teamListQuery.data);
+  const data = teamListQuery.data?.payload.data.result ?? [];
+  const totalItems = teamListQuery.data?.payload.data.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const columns: ColumnDef<AssessmentCriteriaType>[] = [
+  const columns: ColumnDef<TeamType>[] = [
     {
-      accessorKey: "assessmentCriteriaId",
+      accessorKey: "teamId",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -164,33 +154,48 @@ export default function AssessmentTable() {
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("assessmentCriteriaId")}</div>,
+      cell: ({ row }) => <div>{row.getValue("teamId")}</div>,
     },
     {
-      accessorKey: "criteriaName",
+      accessorKey: "teamName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("CriteriaName")}
+          {t("TeamName")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("criteriaName")}</div>,
+      cell: ({ row }) => <div>{row.getValue("teamName")}</div>,
     },
     {
-      accessorKey: "description",
+      accessorKey: "supervisorId",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {t("Description")}
+          {t("SupervisorID")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("description")}</div>,
+      cell: ({ row }) => <div>{row.getValue("supervisorId")}</div>,
+    },
+    {
+      accessorKey: "memberIds",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {t("Members")}
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      // cell: ({ row }) => (
+      //   <div>{(row.getValue("memberIds") as number[]).join(", ")}</div>
+      // ),
     },
     {
       id: "actions",
@@ -207,13 +212,11 @@ export default function AssessmentTable() {
             <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() =>
-                setAssessmentIdEdit(row.original.assessmentCriteriaId)
-              }
+              onClick={() => setTeamIdEdit(row.original.teamId)}
             >
               {t("Edit")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setAssessmentDelete(row.original)}>
+            <DropdownMenuItem onClick={() => setTeamDelete(row.original)}>
               {t("Delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -249,62 +252,53 @@ export default function AssessmentTable() {
   };
 
   return (
-    <AssessmentTableContext.Provider
-      value={{
-        assessmentIdEdit,
-        setAssessmentIdEdit,
-        assessmentDelete,
-        setAssessmentDelete,
-      }}
+    <TeamTableContext.Provider
+      value={{ teamIdEdit, setTeamIdEdit, teamDelete, setTeamDelete }}
     >
       <div className="w-full">
-        <EditAssessment
-          id={assessmentIdEdit}
-          setId={setAssessmentIdEdit}
-          onSubmitSuccess={() => {
-            setAssessmentIdEdit(undefined);
-            assessmentListQuery.refetch();
-          }}
+        <EditTeam
+          id={teamIdEdit}
+          setId={setTeamIdEdit}
+          onSubmitSuccess={teamListQuery.refetch}
         />
-        <AlertDialogDeleteAssessment
-          assessmentDelete={assessmentDelete}
-          setAssessmentDelete={setAssessmentDelete}
-          onSuccess={assessmentListQuery.refetch}
+        <AlertDialogDeleteTeam
+          teamDelete={teamDelete}
+          setTeamDelete={setTeamDelete}
+          onSuccess={teamListQuery.refetch}
         />
-        {assessmentListQuery.isLoading ? (
+        {teamListQuery.isLoading ? (
           <TableSkeleton />
-        ) : assessmentListQuery.isError ? (
+        ) : teamListQuery.isError ? (
           <div className="text-red-500">
-            {t("Error")}: {assessmentListQuery.error.message}
+            {t("Error")}: {teamListQuery.error.message}
           </div>
         ) : (
           <>
             <div className="flex items-center py-4 gap-5">
-              <CreateAssessment onSubmitSuccess={assessmentListQuery.refetch} />
+              <CreateTeam onSubmitSuccess={teamListQuery.refetch} />
               <Input
-                placeholder={t("FilterCriteriaNames")}
+                placeholder={t("FilterTeamNames")}
                 value={
-                  (table
-                    .getColumn("criteriaName")
-                    ?.getFilterValue() as string) ?? ""
+                  (table.getColumn("teamName")?.getFilterValue() as string) ??
+                  ""
                 }
                 onChange={(event) =>
                   table
-                    .getColumn("criteriaName")
+                    .getColumn("teamName")
                     ?.setFilterValue(event.target.value)
                 }
                 className="max-w-sm w-[150px]"
               />
               <Input
-                placeholder={t("FilterDescriptions")}
+                placeholder={t("FilterSupervisorIDs")}
                 value={
                   (table
-                    .getColumn("description")
+                    .getColumn("supervisorId")
                     ?.getFilterValue() as string) ?? ""
                 }
                 onChange={(event) =>
                   table
-                    .getColumn("description")
+                    .getColumn("supervisorId")
                     ?.setFilterValue(event.target.value)
                 }
                 className="max-w-sm w-[150px]"
@@ -401,6 +395,6 @@ export default function AssessmentTable() {
           </>
         )}
       </div>
-    </AssessmentTableContext.Provider>
+    </TeamTableContext.Provider>
   );
 }

@@ -1,24 +1,6 @@
 "use client";
 import { Role } from "@/constants/type";
-import {
-  Home,
-  LineChart,
-  ShoppingCart,
-  Users2,
-  Salad,
-  Table,
-  Caravan,
-  TrainFront,
-  BellElectric,
-  BadgeCent,
-  Newspaper,
-  LockKeyholeOpen,
-  UserRoundPen,
-  UserCog,
-  TrainFrontTunnel,
-  Album,
-  ShieldHalf,
-} from "lucide-react";
+import { Users2, Album, ShieldHalf } from "lucide-react";
 
 const menuItems = [
   {
