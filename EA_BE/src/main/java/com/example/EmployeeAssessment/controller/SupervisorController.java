@@ -37,7 +37,7 @@ public class SupervisorController {
         return supervisorService.getListTeam(spec, pageable);
     }
 
-    @GetMapping("/members/{tid}")
+    @GetMapping("/teams/members/{tid}")
     public ResponseEntity<ResultPaginationDTO> getTeamMembers(@PathVariable("tid") Long teamId,
             @Filter Specification<User> spec,
             Pageable pageable) {
