@@ -2,6 +2,7 @@ import http from "@/lib/http";
 import {
   CreateTeamBodyType,
   TeamListResType,
+  TeamMemberListResType,
   UpdateTeamBodyType,
 } from "@/schemaValidations/team.schema";
 
@@ -15,6 +16,11 @@ const teamApiRequest = {
   update: (id: number, body: UpdateTeamBodyType) =>
     http.put<TeamListResType>(`${PREFIX}/${id}`, body),
   delete: (id: number) => http.delete<TeamListResType>(`${PREFIX}/${id}`),
+  getAllUser: (id: number) => http.delete<TeamListResType>(`${PREFIX}/${id}`),
+  getTeamMembers: (teamId: number, page: number = 1, pageSize: number = 20) =>
+    http.get<TeamMemberListResType>(
+      `${PREFIX}/members/${teamId}?current=${page}&pageSize=${pageSize}`
+    ),
 };
 
 export default teamApiRequest;
