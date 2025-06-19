@@ -5,7 +5,7 @@ import com.example.EmployeeAssessment.domain.Team;
 import com.example.EmployeeAssessment.domain.User;
 import com.example.EmployeeAssessment.domain.request.TeamRequestDTO;
 import com.example.EmployeeAssessment.domain.response.RestResponse;
-import com.example.EmployeeAssessment.domain.response.TeamResponeDTO;
+import com.example.EmployeeAssessment.domain.response.TeamResponseDTO;
 import com.example.EmployeeAssessment.service.SupervisorService;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -24,9 +24,9 @@ public class SupervisorController {
     private final SupervisorService supervisorService;
 
     @PostMapping("/teams")
-    public ResponseEntity<RestResponse<TeamResponeDTO>> createNewTeam(@Valid @RequestBody TeamRequestDTO teamRequest) {
-        TeamResponeDTO teamResponse = supervisorService.createNewTeam(teamRequest);
-        RestResponse<TeamResponeDTO> response = new RestResponse<>();
+    public ResponseEntity<RestResponse<TeamResponseDTO>> createNewTeam(@Valid @RequestBody TeamRequestDTO teamRequest) {
+        TeamResponseDTO teamResponse = supervisorService.createNewTeam(teamRequest);
+        RestResponse<TeamResponseDTO> response = new RestResponse<>();
         response.setStatusCode(HttpStatus.CREATED.value());
         response.setData(teamResponse);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -45,10 +45,10 @@ public class SupervisorController {
     }
 
     @PutMapping("/teams/{tid}")
-    public ResponseEntity<RestResponse<TeamResponeDTO>> updateTeam(@PathVariable("tid") Long teamId,
+    public ResponseEntity<RestResponse<TeamResponseDTO>> updateTeam(@PathVariable("tid") Long teamId,
             @Valid @RequestBody TeamRequestDTO teamRequest) {
-        TeamResponeDTO updatedTeam = supervisorService.updateTeam(teamId, teamRequest);
-        RestResponse<TeamResponeDTO> response = new RestResponse<>();
+        TeamResponseDTO updatedTeam = supervisorService.updateTeam(teamId, teamRequest);
+        RestResponse<TeamResponseDTO> response = new RestResponse<>();
         response.setStatusCode(HttpStatus.OK.value());
         response.setData(updatedTeam);
         return ResponseEntity.ok(response);

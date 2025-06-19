@@ -6,7 +6,7 @@ import com.example.EmployeeAssessment.domain.Team;
 import com.example.EmployeeAssessment.domain.User;
 import com.example.EmployeeAssessment.domain.request.TeamRequestDTO;
 import com.example.EmployeeAssessment.domain.response.EmployeeResponeDTO;
-import com.example.EmployeeAssessment.domain.response.TeamResponeDTO;
+import com.example.EmployeeAssessment.domain.response.TeamResponseDTO;
 import com.example.EmployeeAssessment.repository.TeamRepository;
 import com.example.EmployeeAssessment.repository.UserRepository;
 import com.example.EmployeeAssessment.util.SecurityUtil;
@@ -69,14 +69,39 @@ public class SupervisorService {
         mt.setTotal(page.getTotalElements());
         rs.setMeta(mt);
 
-        List<TeamResponeDTO> teamDTOList = page.getContent().stream()
+        // Ánh xạ Team sang TeamResponseDTO
+        List<TeamResponseDTO> teamDTOList = page.getContent().stream()
                 .map(team -> {
-                    TeamResponeDTO dto = new TeamResponeDTO();
+                    TeamResponseDTO dto = new TeamResponseDTO();
                     dto.setTeamId(team.getTeamId());
                     dto.setTeamName(team.getTeamName());
+
+                    // Ánh xạ Supervisor
+                    if (team.getSupervisor() != null) {
+                        TeamResponseDTO.Supervisor supervisor = new TeamResponseDTO.Supervisor();
+                        supervisor.setSupervisorId(team.getSupervisor().getUserId());
+                        supervisor.setSupervisorName(team.getSupervisor().getUserName());
+                        dto.setSupervisor(supervisor);
+                    }
+
+                    // Ánh xạ Members
+                    if (team.getMembers() != null) {
+                        List<TeamResponseDTO.UserDTO> memberDTOs = team.getMembers().stream()
+                                .map(member -> {
+                                    TeamResponseDTO.UserDTO userDTO = new TeamResponseDTO.UserDTO();
+                                    userDTO.setUserId(member.getUserId());
+                                    userDTO.setUsername(member.getUserName());
+                                    userDTO.setEmail(member.getEmail());
+                                    return userDTO;
+                                })
+                                .toList();
+                        dto.setMembers(memberDTOs);
+                    }
+
                     return dto;
                 })
                 .toList();
+
         rs.setResult(teamDTOList);
 
         return ResponseEntity.ok().body(rs);
@@ -137,7 +162,7 @@ public class SupervisorService {
     }
 
     @Transactional
-    public TeamResponeDTO createNewTeam(TeamRequestDTO teamRequest) {
+    public TeamResponseDTO createNewTeam(TeamRequestDTO teamRequest) {
         logger.info("Starting createNewTeam with teamName: {}", teamRequest.getTeamName());
 
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
@@ -202,14 +227,14 @@ public class SupervisorService {
             logger.info("Saved team has {} members", savedMembers != null ? savedMembers.size() : 0);
         }
 
-        TeamResponeDTO teamDTO = new TeamResponeDTO();
+        TeamResponseDTO teamDTO = new TeamResponseDTO();
         teamDTO.setTeamId(savedTeam.getTeamId());
         teamDTO.setTeamName(savedTeam.getTeamName());
         return teamDTO;
     }
 
     @Transactional
-    public TeamResponeDTO updateTeam(Long teamId, TeamRequestDTO teamRequest) {
+    public TeamResponseDTO updateTeam(Long teamId, TeamRequestDTO teamRequest) {
         logger.info("Starting updateTeam with teamId: {}", teamId);
 
         // Lấy team theo ID
@@ -299,7 +324,7 @@ public class SupervisorService {
         logger.info("Updated team has {} members", savedMembers != null ? savedMembers.size() : 0);
 
         // Map từ Team → TeamResponseDTO
-        TeamResponeDTO teamDTO = new TeamResponeDTO();
+        TeamResponseDTO teamDTO = new TeamResponseDTO();
         teamDTO.setTeamId(updatedTeam.getTeamId());
         teamDTO.setTeamName(updatedTeam.getTeamName());
         return teamDTO;
