@@ -64,9 +64,9 @@ public class SupervisorController {
     }
 
     @GetMapping("/teams/{tid}")
-    public ResponseEntity<Team> getTeamById(@PathVariable("tid") Long teamId) {
-        Team team = this.supervisorService.getTeamById(teamId);
-        return ResponseEntity.ok().body(team);
+    public ResponseEntity<TeamResponseDTO> getTeamById(@PathVariable("tid") Long teamId) {
+        TeamResponseDTO teamDTO = this.supervisorService.getTeamById(teamId);
+        return ResponseEntity.ok().body(teamDTO);
 
     }
 

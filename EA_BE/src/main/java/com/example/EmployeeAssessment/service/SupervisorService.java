@@ -366,10 +366,36 @@ public class SupervisorService {
         logger.info("Team deleted with teamId: {}", teamId);
     }
 
-    public Team getTeamById(Long teamId) {
+    public TeamResponseDTO getTeamById(Long teamId) {
         logger.info("Fetching team by ID: {}", teamId);
-        Team team = teamRepository.findById(teamId).get();
-        return team;
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Team not found with ID: " + teamId));
 
+        // Ánh xạ Team sang TeamResponseDTO
+        TeamResponseDTO teamDTO = new TeamResponseDTO();
+        teamDTO.setTeamId(team.getTeamId());
+        teamDTO.setTeamName(team.getTeamName());
+
+        // Ánh xạ Supervisor
+        if (team.getSupervisor() != null) {
+            TeamResponseDTO.Supervisor supervisorDTO = new TeamResponseDTO.Supervisor();
+            supervisorDTO.setSupervisorId(team.getSupervisor().getUserId());
+            supervisorDTO.setSupervisorName(team.getSupervisor().getUserName());
+            teamDTO.setSupervisor(supervisorDTO);
+        }
+
+        // Ánh xạ List<User> sang List<UserDTO>
+        List<TeamResponseDTO.UserDTO> userDTOs = team.getMembers().stream()
+                .map(user -> {
+                    TeamResponseDTO.UserDTO userDTO = new TeamResponseDTO.UserDTO();
+                    userDTO.setUserId(user.getUserId());
+                    userDTO.setUsername(user.getUserName());
+                    userDTO.setEmail(user.getEmail());
+                    return userDTO;
+                })
+                .collect(Collectors.toList());
+        teamDTO.setMembers(userDTOs);
+
+        return teamDTO;
     }
 }
