@@ -2,7 +2,6 @@ package com.example.EmployeeAssessment.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,15 +11,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.turkraft.springfilter.boot.Filter;
-
-import jakarta.validation.Valid;
-
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
 import com.example.EmployeeAssessment.domain.ResultPaginationDTO;
-import com.example.EmployeeAssessment.domain.request.ReqUpdateUserDTO;
 import com.example.EmployeeAssessment.service.AssessmentCriteriaService;
 import com.example.EmployeeAssessment.util.annotation.APIMessage;
 import com.example.EmployeeAssessment.util.error.IdInvalidException;
