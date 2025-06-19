@@ -1,13 +1,11 @@
 "use client";
-import menuItems from "@/app/manage/menuItems"; // Named import for the array
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Package2, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-// Import types from menuItems.tsx
+import menuItems from "./menuItems";
 
 export default function MobileNavLinks() {
   return (
@@ -27,6 +25,21 @@ export default function MobileNavLinks() {
             <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
             <span className="sr-only">Acme Inc</span>
           </Link>
+
+          {menuItems.map((item: any, index: number) => {
+            return (
+              <Link
+                key={index}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-4 px-2.5 hover:text-foreground"
+                )}
+              >
+                <item.Icon className="h-5 w-5" />
+                {item.title}
+              </Link>
+            );
+          })}
         </nav>
       </SheetContent>
     </Sheet>
