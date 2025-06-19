@@ -6,7 +6,6 @@ import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -50,14 +49,14 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whiteList = {
-            "/",
-            "/api/v1/auth/login",
-            "/api/v1/users/**",
-            "/api/v1/assessments/**",
-            "/api/v1/auth/refresh",
-            "/resources/**",
-            "/css/**",
-            "/js/**"
+                "/",
+                "/api/v1/auth/login",
+                // "/api/v1/users/**",
+                // "/api/v1/assessments/**",
+                "/api/v1/auth/refresh",
+                "/resources/**",
+                "/css/**",
+                "/js/**"
         };
 
         http
@@ -65,11 +64,11 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(whiteList).permitAll()
-                        .requestMatchers("/api/v1/assessments/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/assessment-criteria")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR")
+                        .requestMatchers("/api/v1/assessments/**").hasAnyAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v1/assessments/**").hasAnyAuthority("ROLE_SUPERVISOR")
+                        .requestMatchers("/api/v1/user/**").hasAnyAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/v1/assessment-criteria/**").hasAnyAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/v1/teams/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/teams/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
