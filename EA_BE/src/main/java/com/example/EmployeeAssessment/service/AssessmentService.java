@@ -12,6 +12,7 @@ import com.example.EmployeeAssessment.domain.Assessment;
 import com.example.EmployeeAssessment.domain.AssessmentCriteria;
 import com.example.EmployeeAssessment.domain.User;
 import com.example.EmployeeAssessment.dto.AssessmentCreateDTO;
+import com.example.EmployeeAssessment.dto.AssessmentDetailDTO;
 import com.example.EmployeeAssessment.repository.AssessmentCriteriaRepository;
 import com.example.EmployeeAssessment.repository.AssessmentRepository;
 import com.example.EmployeeAssessment.repository.UserRepository;
@@ -56,5 +57,27 @@ public class AssessmentService {
         assessment.setAssessmentCriteria(criteriaList);
 
         return assessmentRepository.save(assessment);
+    }
+
+    public AssessmentDetailDTO getAssessmentDetailById(Long id) {
+        Assessment assessment = assessmentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        AssessmentDetailDTO dto = new AssessmentDetailDTO();
+        dto.setAssessmentId(assessment.getAssessmentId());
+        dto.setScore(assessment.getScore());
+        dto.setFeedback(assessment.getFeedback());
+        dto.setStartDate(assessment.getStartDate());
+        dto.setEndDate(assessment.getEndDate());
+        dto.setUserName(assessment.getUser().getUserName());
+        dto.setCriteria(
+            assessment.getAssessmentCriteria().stream().map(c -> {
+                AssessmentDetailDTO.CriteriaDTO cdto = new AssessmentDetailDTO.CriteriaDTO();
+                cdto.setAssessmentCriteriaId(c.getAssessmentCriteriaId());
+                cdto.setCriteriaName(c.getCriteriaName());
+                cdto.setDescription(c.getDescription());
+                return cdto;
+            }).toList()
+        );
+        return dto;
     }
 }
